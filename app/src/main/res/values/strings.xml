@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">İlmNet</string>
+    <string name="tag_line">Akademik PDF Sosyal Ağı</string>
+    <string name="splash_motto">Bilgi Paylaştıkça Çoğalır • Offline-First</string>
+    <string name="tab_login">Giriş Yap</string>
+    <string name="tab_register">Kayıt Ol</string>
+    <string name="title_welcome_back">Akademiye Hoş Geldiniz</string>
+    <string name="title_register">Akademik Hesap Oluştur</string>
+    <string name="subtitle_auth">GitHub API &amp; Offline-First Altyapısı ile Güvenli Erişim</string>
+    <string name="hint_full_name">Ad Soyad / Akademik Ünvan</string>
+    <string name="hint_email">E-posta Adresi</string>
+    <string name="hint_password">Şifre</string>
+    <string name="hint_github_user">GitHub Kullanıcı Adı (Opsiyonel)</string>
+    <string name="btn_login">Giriş Yap</string>
+    <string name="btn_register">Kayıt Ol ve Başla</string>
+    <string name="btn_logout">Oturumu Kapat</string>
+    <string name="status_persistent_session">Kalıcı Oturum: EncryptedSharedPreferences</string>
+    <string name="status_room_ready">Yerel Veritabanı: Room DB (UserEntity)</string>
+    <string name="status_github_ready">Ağ İstemcisi: Retrofit (api.github.com)</string>
+    <string name="label_academic_profile">Akademik Profil Kartı</string>
+    <string name="label_phase1_badge">FAZ 1 Tamamlandı</string>
+    <string name="error_empty_fields">Lütfen gerekli tüm alanları doldurunuz.</string>
+    <string name="error_invalid_email">Geçerli bir e-posta adresi giriniz.</string>
+    <string name="error_short_password">Şifre en az 6 karakter olmalıdır.</string>
+    <string name="error_user_not_found">Kullanıcı bulunamadı. Lütfen önce kayıt olun.</string>
+    <string name="error_user_already_exists">Bu e-posta adresiyle zaten bir kullanıcı kayıtlı.</string>
+    <string name="success_registered">Akademik hesap başarıyla oluşturuldu!</string>
+    <string name="widget_ilm_mirror_desc">İlmNet İlim Aynası - Günlük streak ve hikmetli motivasyon aynası</string>
+    <string name="title_notifications">İlmi Bildirim Merkezi</string>
+</resources>
+

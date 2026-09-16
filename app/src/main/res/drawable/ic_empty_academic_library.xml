@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Arkadaki Bulut Hatları -->
+    <path
+        android:fillColor="#15D4AF37"
+        android:strokeColor="#66D4AF37"
+        android:strokeWidth="1.5"
+        android:pathData="M70,44c-1.2,-12 -11,-21 -23,-21 -9.5,0 -17.7,5.8 -21.2,14.3C15.8,38.8 8,47.5 8,58c0,11.6 9.4,21 21,21h40c9.9,0 18,-8.1 18,-18 0,-9.2 -6.9,-16.7 -16,-17.8z" />
+    <!-- Açık Kitap / Rahle Figürü -->
+    <path
+        android:fillColor="#250F281E"
+        android:strokeColor="#FFD700"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.5"
+        android:pathData="M48,68 L48,45 C41,40 31,41 24,46 L24,69 C31,64 41,63 48,68 Z" />
+    <path
+        android:fillColor="#250F281E"
+        android:strokeColor="#FFD700"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.5"
+        android:pathData="M48,68 L48,45 C55,40 65,41 72,46 L72,69 C65,64 55,63 48,68 Z" />
+    <!-- Kitap Sayfası İçi Çizgileri -->
+    <path
+        android:strokeColor="#80D4AF37"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5"
+        android:pathData="M30,52 C35,49 41,49 45,52" />
+    <path
+        android:strokeColor="#80D4AF37"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5"
+        android:pathData="M30,58 C35,55 41,55 45,58" />
+    <path
+        android:strokeColor="#80D4AF37"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5"
+        android:pathData="M51,52 C55,49 61,49 66,52" />
+    <path
+        android:strokeColor="#80D4AF37"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5"
+        android:pathData="M51,58 C55,55 61,55 66,58" />
+    <!-- Yıldız / Hilal Işıltısı -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M48,26 L50,32 L56,34 L50,36 L48,42 L46,36 L40,34 L46,32 Z" />
+</vector>

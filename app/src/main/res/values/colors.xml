@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash Screen Gradient (#08140E -> #040A07) -->
+    <color name="splash_bg_start">#08140E</color>
+    <color name="splash_bg_end">#040A07</color>
+
+    <!-- Auth Screen Gradient (#0A1C16 -> #050A0F) -->
+    <color name="auth_bg_start">#0A1C16</color>
+    <color name="auth_bg_end">#050A0F</color>
+
+    <!-- Academic Gold Gradients & Accents (#FFD700 -> #E5C158 -> #D4AF37 -> #AA8A28) -->
+    <color name="gold_vibrant">#FFD700</color>
+    <color name="gold_vibrant_glow">#66FFD700</color>
+    <color name="gold_start">#E5C158</color>
+    <color name="gold_center">#D4AF37</color>
+    <color name="gold_end">#AA8A28</color>
+    <color name="gold_dark">#80681B</color>
+    <color name="gold_pressed">#99781E</color>
+    <color name="gold_glow">#40D4AF37</color>
+    <color name="highlighter_yellow">#66FFE600</color>
+    <color name="highlighter_green">#6600E676</color>
+
+    <!-- Glassmorphism Layers & Strokes -->
+    <color name="glass_surface">#1AFFFFFF</color>
+    <color name="glass_surface_elevated">#26FFFFFF</color>
+    <color name="glass_input_bg">#14FFFFFF</color>
+    <color name="glass_stroke">#33D4AF37</color>
+    <color name="glass_stroke_white">#26FFFFFF</color>
+    <color name="glass_stroke_focused">#CCD4AF37</color>
+    <color name="glass_chip_selected">#33D4AF37</color>
+    <color name="glass_chip_unselected">#0DFFFFFF</color>
+
+    <!-- Typography & Status -->
+    <color name="text_primary">#F8F9FA</color>
+    <color name="text_secondary">#CFD8DC</color>
+    <color name="text_tertiary">#90A4AE</color>
+    <color name="text_gold">#E5C158</color>
+    <color name="btn_text_dark">#0A140E</color>
+    <color name="error_red">#FF6B6B</color>
+    <color name="success_green">#4EBA7B</color>
+
+    <!-- Standard Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Faz 6: Göz Koruma & Tema Renkleri -->
+    <color name="amber_eye_filter">#33FF9900</color>
+    <color name="amber_eye_filter_deep">#4DFF9900</color>
+    <color name="switch_track_off">#4DFFFFFF</color>
+    <color name="switch_track_on">#80FFD700</color>
+    <color name="theme_islamic_accent">#14B8A6</color>
+    <color name="theme_techno_accent">#00E5FF</color>
+    <color name="theme_antique_accent">#D4A373</color>
+    <color name="theme_simple_accent">#E4E4E7</color>
+</resources>
+

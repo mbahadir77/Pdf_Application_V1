@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="10dp">
+
+    <!-- Sayfa Numarası Rozeti -->
+    <TextView
+        android:id="@+id/tv_page_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_glass_badge"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="3dp"
+        android:text="Sayfa 1"
+        android:textColor="@color/gold_start"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <!-- Sayfa Kağıdı, Zoomable Kapsayıcı ve Fosforlu Çizim Katmanı -->
+    <com.example.ui.reader.ZoomablePageLayout
+        android:id="@+id/container_page_canvas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="6dp">
+
+        <!-- Render Edilen PDF Sayfası -->
+        <ImageView
+            android:id="@+id/iv_pdf_page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:contentDescription="PDF Sayfası"
+            android:scaleType="fitCenter"
+            tools:layout_height="520dp" />
+
+        <!-- Fosforlu Kalem Serbest Çizim Katmanı -->
+        <com.example.ui.reader.HighlighterDrawingView
+            android:id="@+id/view_highlighter_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.example.ui.reader.ZoomablePageLayout>
+
+</LinearLayout>

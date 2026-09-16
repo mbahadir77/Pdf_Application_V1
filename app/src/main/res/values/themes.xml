@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/gold_center</item>
+        <item name="colorOnPrimary">@color/btn_text_dark</item>
+        <item name="colorSecondary">@color/gold_start</item>
+        <item name="android:statusBarColor">@color/splash_bg_start</item>
+        <item name="android:navigationBarColor">@color/splash_bg_end</item>
+        <item name="android:windowBackground">@color/splash_bg_start</item>
+    </style>
+
+    <style name="ShapeAppearance.App.Circle" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Theme.IlmNet.BottomSheetDialog" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="bottomSheetStyle">@style/Widget.IlmNet.BottomSheet</item>
+    </style>
+
+    <style name="Widget.IlmNet.BottomSheet" parent="Widget.Material3.BottomSheet">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.IlmNet.FullScreenCredits" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">#050505</item>
+        <item name="android:navigationBarColor">#050505</item>
+        <item name="android:windowBackground">#050505</item>
+    </style>
+</resources>
+

@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Soğuk/Terk edilmiş Halka -->
+    <path
+        android:fillColor="#1578909C"
+        android:pathData="M24,24m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0" />
+    <!-- Sönmüş Kandil Kaidesi -->
+    <path
+        android:fillColor="#546E7A"
+        android:pathData="M16,32 L32,32 L30,38 L18,38 Z" />
+    <path
+        android:fillColor="#455A64"
+        android:pathData="M14,38 L34,38 L34,40 L14,40 Z" />
+    <path
+        android:fillColor="#78909C"
+        android:pathData="M22,26 L26,26 L26,32 L22,32 Z" />
+    <!-- Tütmekte Olan İnce Gri Duman (Sönmüş Kandil) -->
+    <path
+        android:fillColor="#90A4AE"
+        android:pathData="M23,24 C23,22 25,21 25,19 C25,17 23,16 23,14 C23,12 25,11 25,9 L24,9 C24,10.5 22,11.5 22,14 C22,16 24,17 24,19 C24,21 22,22 22,24 Z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M26,17 C26,15 28,14 28,12 L27,12 C27,13.5 25,14.5 25,17 Z" />
+    <!-- Toz Zerreleri -->
+    <path
+        android:fillColor="#78909C"
+        android:pathData="M13,18m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+    <path
+        android:fillColor="#78909C"
+        android:pathData="M35,22m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+</vector>

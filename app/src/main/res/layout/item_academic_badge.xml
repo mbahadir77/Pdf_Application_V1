@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_badge_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    android:background="@drawable/bg_badge_unlocked"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <!-- Üst Başlık ve Rütbe İndikatörü -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Rozet / Rütbe İkonu (Bakır 🥉, Gümüş 🥈, Altın 🥇, Elmas 💎) -->
+        <TextView
+            android:id="@+id/tv_badge_tier_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:textSize="18sp"
+            tools:text="💎" />
+
+        <!-- Kategori / İlim Dalı İkonu & Adı -->
+        <TextView
+            android:id="@+id/tv_badge_category"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/gold_vibrant"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Tefsir" />
+
+        <!-- Rütbe / Kademe Rozeti -->
+        <TextView
+            android:id="@+id/tv_badge_tier_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_badge"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:textColor="@color/gold_start"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="Müfessir" />
+    </LinearLayout>
+
+    <!-- İlim Dalı Açıklaması -->
+    <TextView
+        android:id="@+id/tv_badge_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/text_tertiary"
+        android:textSize="10sp"
+        tools:text="Kur'an İlimleri &amp; Dirayet Tefsiri" />
+
+    <!-- Yıldız / Kademe Göstergeleri (1-4 Yıldız) -->
+    <LinearLayout
+        android:id="@+id/layout_badge_stars"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_badge_star1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⭐"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tv_badge_star2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:text="⭐"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tv_badge_star3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:text="⭐"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tv_badge_star4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:text="⭐"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- İlerleme Çubuğu -->
+    <ProgressBar
+        android:id="@+id/pb_badge_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="8dp"
+        android:max="100"
+        android:progress="60"
+        android:progressTint="@color/gold_vibrant" />
+
+    <!-- Hedef Sayacı (Örn: 12/15 Eser) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_badge_progress_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gold_start"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="12/15 Eser" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tv_badge_next_tier_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_tertiary"
+            android:textSize="9sp"
+            tools:text="Hedef: Hâfız" />
+    </LinearLayout>
+
+</LinearLayout>

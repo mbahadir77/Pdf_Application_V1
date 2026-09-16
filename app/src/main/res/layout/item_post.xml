@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    android:background="@drawable/bg_glass_card"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Üst Kısım: Yazar Bilgileri ve Kategori Rozeti -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp">
+
+            <View
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_circle_avatar" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_author_avatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_academic_logo"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_author_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Doç. Dr. Ahmet Farabi" />
+
+            <TextView
+                android:id="@+id/tv_author_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="İstanbul Üniversitesi • İlahiyat Fak." />
+        </LinearLayout>
+
+        <!-- Kategori Rozeti (Örn: Tefsir, Hadis, Felsefe) -->
+        <TextView
+            android:id="@+id/tv_post_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_category_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/gold_start"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="Tefsir" />
+
+        <!-- Üç Nokta / Seçenekler Butonu (Sil / Paylaş) -->
+        <ImageView
+            android:id="@+id/btn_post_options"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Seçenekler"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_more_vert"
+            app:tint="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- Makale / PDF Başlığı ve Açıklaması -->
+    <TextView
+        android:id="@+id/tv_post_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:lineSpacingExtra="2dp"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="Klasik Dönem Tefsir Geleneğinde Semantik Analiz Yöntemleri" />
+
+    <TextView
+        android:id="@+id/tv_post_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:lineSpacingExtra="2dp"
+        android:maxLines="3"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        tools:text="Bu çalışma, hicri 4. ve 5. yüzyıl tefsir literatüründe lafız-mana ilişkisini ve lügavi tahlil metodolojilerini ele almaktadır." />
+
+    <!-- Orta Kısım: PDF Gerçek Kapak Resmi (PdfRenderer 1. Sayfa Önizlemesi) -->
+    <FrameLayout
+        android:id="@+id/container_cover_preview"
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        android:layout_marginTop="12dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_pdf_cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_academic_parchment_cover"
+            android:contentDescription="PDF Kapağı"
+            android:elevation="4dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_academic_parchment_cover"
+            android:transitionName="pdf_cover_transition"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium"
+            app:strokeColor="#80D4AF37"
+            app:strokeWidth="1.5dp" />
+
+        <!-- PDF Bilgi Rozeti -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_pdf_chip"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PDF"
+                android:textColor="@color/gold_start"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_pdf_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/text_primary"
+                android:textSize="10sp"
+                tools:text="• 2.4 MB" />
+        </LinearLayout>
+
+        <!-- Çevrimdışı / GitHub Rozeti -->
+        <TextView
+            android:id="@+id/tv_storage_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_pdf_chip"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:text="GitHub Release Asset"
+            android:textColor="@color/text_tertiary"
+            android:textSize="10sp" />
+    </FrameLayout>
+
+    <!-- İnce Ayrım Çizgisi -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        android:layout_marginTop="14dp"
+        android:background="@color/glass_stroke_white" />
+
+    <!-- Alt Kısım: Beğen, Yorum Yap, Tarih ve Oku Butonu -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Altın ikonlu 'Beğen' Butonu -->
+        <LinearLayout
+            android:id="@+id/btn_post_like"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp">
+
+            <ImageView
+                android:id="@+id/iv_like_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_heart_outline" />
+
+            <TextView
+                android:id="@+id/tv_like_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="42" />
+        </LinearLayout>
+
+        <!-- Altın ikonlu 'Yorum Yap' Butonu -->
+        <LinearLayout
+            android:id="@+id/btn_post_comment"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="14dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp">
+
+            <ImageView
+                android:id="@+id/iv_comment_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_comment_outline" />
+
+            <TextView
+                android:id="@+id/tv_comment_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="7" />
+        </LinearLayout>
+
+        <!-- Dışa Paylaş Butonu (FAZ 7) -->
+        <LinearLayout
+            android:id="@+id/btn_post_share"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="10dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp">
+
+            <ImageView
+                android:id="@+id/iv_share_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="Paylaş"
+                android:src="@drawable/ic_share" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_post_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp"
+            tools:text="2 sa önce" />
+
+        <!-- 'PDF Oku' Altın Butonu -->
+        <LinearLayout
+            android:id="@+id/btn_read_pdf"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_btn_gold_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_download_pdf" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="PDF Oku"
+                android:textColor="@color/btn_text_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    android:background="@drawable/bg_glass_card"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Üst Satır: Yazar Avatarı ve İsim Çubukları -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_skeleton_circle" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="140dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_skeleton_rect" />
+
+            <View
+                android:layout_width="90dp"
+                android:layout_height="10dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_skeleton_rect" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="56dp"
+            android:layout_height="22dp"
+            android:background="@drawable/bg_skeleton_rect" />
+    </LinearLayout>
+
+    <!-- Başlık Çubuğu -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_skeleton_rect" />
+
+    <View
+        android:layout_width="220dp"
+        android:layout_height="14dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_skeleton_rect" />
+
+    <!-- Açıklama Satırları -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="11dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_skeleton_rect" />
+
+    <View
+        android:layout_width="180dp"
+        android:layout_height="11dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/bg_skeleton_rect" />
+
+    <!-- PDF Gerçek Kapak İskeleti -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_skeleton_rect" />
+
+    <!-- Alt Aksiyon Barı -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="90dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_skeleton_rect" />
+
+        <View
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_skeleton_rect" />
+
+        <View
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_skeleton_rect" />
+
+        <View
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_skeleton_rect" />
+    </LinearLayout>
+</LinearLayout>

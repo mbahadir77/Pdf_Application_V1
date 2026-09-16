@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pdf_reader_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_auth_gradient"
+    android:orientation="vertical">
+
+    <!-- Yerleşik PDF Okuyucu Üst Barı -->
+    <LinearLayout
+        android:id="@+id/layout_reader_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_glass_tab_bar"
+        android:elevation="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp">
+
+        <!-- Geri Butonu -->
+        <ImageView
+            android:id="@+id/btn_reader_back"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Geri Dön"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_back" />
+
+        <!-- Makale Bilgisi -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_reader_doc_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Klasik Dönem Tefsir Yöntemleri"
+                android:textColor="@color/gold_vibrant"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_reader_doc_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Doç. Dr. Ahmet Farabi • Tefsir"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Arama Butonu -->
+        <ImageView
+            android:id="@+id/btn_reader_search"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Belge İçi Metin Ara"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_search"
+            app:tint="@color/gold_vibrant" />
+
+        <!-- Mod Seçici Hap (Göz: Okuma | Kalem: Çizim) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_tab_container"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="3dp">
+
+            <!-- Göz: Sadece Kaydırma / Okuma -->
+            <FrameLayout
+                android:id="@+id/btn_reader_mode_eye"
+                android:layout_width="38dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_tab_active"
+                android:clickable="true"
+                android:contentDescription="Göz (Kaydırma ve Okuma Modu)"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/iv_mode_eye_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_eye" />
+            </FrameLayout>
+
+            <!-- Kalem: Fosforlu Serbest Çizim -->
+            <FrameLayout
+                android:id="@+id/btn_reader_mode_pen"
+                android:layout_width="38dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_tab_inactive"
+                android:clickable="true"
+                android:contentDescription="Kalem (Fosforlu Serbest Çizim)"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/iv_mode_pen_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_pen" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Çizimleri Temizle Butonu -->
+        <ImageView
+            android:id="@+id/btn_reader_clear_draw"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Vurguları Temizle"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_close_circle" />
+    </LinearLayout>
+
+    <!-- Mini Çok Renkli Kalem Paleti (Kalem modu aktifken açılır) -->
+    <LinearLayout
+        android:id="@+id/layout_color_palette"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#2E0E2519"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="6dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎨 Vurgu Rengi:"
+            android:textColor="@color/gold_start"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <!-- Sarı Renk Seçici -->
+        <FrameLayout
+            android:id="@+id/btn_color_yellow"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_color_dot_selected_frame"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_color_dot_yellow" />
+        </FrameLayout>
+
+        <!-- Mavi Renk Seçici -->
+        <FrameLayout
+            android:id="@+id/btn_color_blue"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_color_dot_unselected_frame"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_color_dot_blue" />
+        </FrameLayout>
+
+        <!-- Yeşil Renk Seçici -->
+        <FrameLayout
+            android:id="@+id/btn_color_green"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_color_dot_unselected_frame"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_color_dot_green" />
+        </FrameLayout>
+
+        <!-- Kırmızı Renk Seçici -->
+        <FrameLayout
+            android:id="@+id/btn_color_red"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_color_dot_unselected_frame"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_color_dot_red" />
+        </FrameLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tv_active_color_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sarı"
+            android:textColor="@color/gold_vibrant"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Belge İçi Arama Paneli (Arama ikonu tıklandığında açılır) -->
+    <LinearLayout
+        android:id="@+id/layout_reader_search_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_glass_tab_bar"
+        android:elevation="6dp"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_glass_search_bar"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_search"
+                app:tint="@color/gold_vibrant" />
+
+            <EditText
+                android:id="@+id/et_reader_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Belge içinde kelime veya kavram ara..."
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:singleLine="true"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pb_search_loading"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:indeterminateTint="@color/gold_vibrant"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/btn_reader_search_execute"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Ara"
+                android:padding="4dp"
+                android:src="@drawable/ic_arrow_forward"
+                app:tint="@color/gold_vibrant" />
+
+            <ImageView
+                android:id="@+id/btn_reader_close_search"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Kapat"
+                android:padding="4dp"
+                android:src="@drawable/ic_close_circle" />
+        </LinearLayout>
+
+        <!-- Arama Özet Başlığı -->
+        <TextView
+            android:id="@+id/tv_search_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/gold_start"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="3 sayfada 5 eşleşme bulundu"
+            tools:visibility="visible" />
+
+        <!-- Arama Sonuçları Listesi -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_search_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxHeight="160dp"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="true"
+            tools:itemCount="2"
+            tools:listitem="@layout/item_pdf_search_result" />
+    </LinearLayout>
+
+    <!-- Durum ve İpucu Bilgisi -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#1F08140E"
+        android:gravity="center"
+        android:paddingVertical="4dp">
+
+        <TextView
+            android:id="@+id/tv_reader_mode_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👀 Okuma Modu: Sayfaları dikey kaydırarak inceleyin."
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- PDF Sayfaları İçerik Alanı -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Sayfalar Listesi (android.graphics.pdf.PdfRenderer ile Render Edilir) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_pdf_pages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="24dp"
+            tools:listitem="@layout/item_pdf_page" />
+
+        <!-- Gerçek Göz Koruma & Mavi Işık Filtresi (Warm Amber Tint) -->
+        <View
+            android:id="@+id/view_reader_amber_filter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/amber_eye_filter"
+            android:clickable="false"
+            android:focusable="false"
+            android:visibility="gone" />
+
+        <!-- Yükleniyor Durumu -->
+        <LinearLayout
+            android:id="@+id/layout_reader_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_glass_card"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:indeterminateTint="@color/gold_vibrant" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Akademik Belge İşleniyor..."
+                android:textColor="@color/gold_start"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="PdfRenderer sayfaları vektörel işliyor"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+</LinearLayout>
