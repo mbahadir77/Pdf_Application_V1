@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -147,6 +149,7 @@ class MainActivity : AppCompatActivity() {
 
     private var selectedAvatarPath: String? = null
     private var selectedPdfCoverPath: String? = null
+    private var isSplashHandled: Boolean = false
 
     // FAZ 5 REVİZYONU: WhatsApp Tarzı 1:1 Yuvarlak/Kare Görsel Kırpıcı (CanHub Cropper)
     private val cropImageLauncher = registerForActivityResult(CropImageContract()) { result ->
@@ -205,7 +208,7 @@ class MainActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     selectedAvatarPath = targetFile.absolutePath
                     displayAvatar(binding.viewEditProfile.ivEditAvatarPreview, selectedAvatarPath)
-                    Toast.makeText(this@MainActivity, "Kırpılan fotoğraf hazırlandı.", Toast.LENGTH_SHORT).show()
+                    IlmToast.success(this@MainActivity, "Kırpılan profil fotoğrafı seçildi! Kaydetmek için 'Değişiklikleri Kaydet'e dokunun.")
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -263,6 +266,9 @@ class MainActivity : AppCompatActivity() {
         observeFeedState()
         observeEditProfileState()
         observeNotificationsCount()
+
+        // Bildirim Deep Link Yönlendirmesini Gerçekleştir
+        handleNotificationDeepLink(intent)
     }
 
     override fun onResume() {
@@ -274,6 +280,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleIncomingShareIntent(intent)
+        handleNotificationDeepLink(intent)
     }
 
     private fun checkNotificationPermission() {
@@ -349,6 +356,29 @@ class MainActivity : AppCompatActivity() {
                 "Dışarıdan PDF alındı! Paylaşmak için bilgileri tamamlayın 📄",
                 title = "Belge İçe Aktarıldı 📥"
             )
+        }
+    }
+
+    /**
+     * Bildirimlerden gelen Deep Link intentlerini yakalar:
+     * - EXTRA_TARGET_POST_ID varsa doğrudan ilgili PDF okuyucusunu açar.
+     * - EXTRA_TARGET_AUTHOR varsa ilgili araştırmacının ziyaretçi profilini açar.
+     */
+    private fun handleNotificationDeepLink(incomingIntent: Intent?) {
+        if (incomingIntent == null) return
+        val targetPostId = incomingIntent.getStringExtra(NotificationHelper.EXTRA_TARGET_POST_ID)
+        val targetAuthor = incomingIntent.getStringExtra(NotificationHelper.EXTRA_TARGET_AUTHOR)
+
+        if (!targetPostId.isNullOrBlank()) {
+            lifecycleScope.launch {
+                val db = AppDatabase.getInstance(this@MainActivity)
+                val post = withContext(Dispatchers.IO) { db.postDao().getPostById(targetPostId) }
+                if (post != null) {
+                    openInternalPdfReader(post)
+                }
+            }
+        } else if (!targetAuthor.isNullOrBlank()) {
+            openVisitorProfile(targetAuthor, null, null)
         }
     }
 
@@ -540,12 +570,20 @@ class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     val currentUserName = authViewModel.currentUser.value?.fullName ?: "Bir araştırmacı"
-                    NotificationHelper.showPdfReadNotification(this@MainActivity, post.title, currentUserName)
+                    val currentUserId = authViewModel.currentUser.value?.id
+                    NotificationHelper.showPdfReadNotification(
+                        context = this@MainActivity,
+                        pdfTitle = post.title,
+                        readerName = currentUserName,
+                        readerId = currentUserId,
+                        authorId = post.userId,
+                        targetPostId = post.id
+                    )
                     openInternalPdfReader(post)
                 }
             },
-            onAuthorClicked = { authorName, avatarUrl ->
-                openVisitorProfile(authorName, avatarUrl)
+            onAuthorClicked = { authorName, avatarUrl, authorId ->
+                openVisitorProfile(authorName, avatarUrl, authorId)
             },
             onDeletePostClicked = { post ->
                 confirmDeletePost(post)
@@ -851,6 +889,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
+        isSplashHandled = false
         authViewModel.logout()
         Toast.makeText(this, "Oturum güvenle kapatıldı.", Toast.LENGTH_SHORT).show()
         showAuthScreen()
@@ -963,12 +1002,20 @@ class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     val currentUserName = authViewModel.currentUser.value?.fullName ?: "Bir araştırmacı"
-                    NotificationHelper.showPdfReadNotification(this@MainActivity, post.title, currentUserName)
+                    val currentUserId = authViewModel.currentUser.value?.id
+                    NotificationHelper.showPdfReadNotification(
+                        context = this@MainActivity,
+                        pdfTitle = post.title,
+                        readerName = currentUserName,
+                        readerId = currentUserId,
+                        authorId = post.userId,
+                        targetPostId = post.id
+                    )
                     openInternalPdfReader(post)
                 }
             },
-            onAuthorClicked = { authorName, avatarUrl ->
-                openVisitorProfile(authorName, avatarUrl)
+            onAuthorClicked = { authorName, avatarUrl, authorId ->
+                openVisitorProfile(authorName, avatarUrl, authorId)
             },
             onDeletePostClicked = { post ->
                 confirmDeletePost(post)
@@ -1444,6 +1491,8 @@ class MainActivity : AppCompatActivity() {
 
         val readerBinding = binding.viewPdfReader
         readerBinding.root.visibility = View.VISIBLE
+        val enterAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_enter)
+        readerBinding.root.startAnimation(enterAnim)
 
         readerBinding.tvReaderDocTitle.text = post.title
         readerBinding.tvReaderDocAuthor.text = "${post.authorName} • ${post.category}"
@@ -1478,6 +1527,8 @@ class MainActivity : AppCompatActivity() {
 
                 readerBinding.layoutReaderLoading.visibility = View.GONE
                 readerBinding.rvPdfPages.visibility = View.VISIBLE
+                val docAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.doc_switch_in)
+                readerBinding.rvPdfPages.startAnimation(docAnim)
             } catch (e: Exception) {
                 readerBinding.layoutReaderLoading.visibility = View.GONE
                 IlmToast.error(this@MainActivity, "PDF açılamadı: ${e.localizedMessage}")
@@ -1503,29 +1554,37 @@ class MainActivity : AppCompatActivity() {
 
     private fun closeInternalPdfReader() {
         val readerBinding = binding.viewPdfReader
-        readerBinding.root.visibility = View.GONE
-        readerBinding.layoutReaderSearchPanel.visibility = View.GONE
-        readerBinding.etReaderSearch.text = null
-        readerBinding.tvSearchSummary.visibility = View.GONE
-        searchResultAdapter.submitResults(emptyList())
+        val exitAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_exit)
+        exitAnim.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                readerBinding.root.visibility = View.GONE
+                readerBinding.layoutReaderSearchPanel.visibility = View.GONE
+                readerBinding.etReaderSearch.text = null
+                readerBinding.tvSearchSummary.visibility = View.GONE
+                searchResultAdapter.submitResults(emptyList())
 
-        currentPdfAdapter?.close()
-        currentPdfAdapter = null
-        currentActivePdfFile = null
-        showMainAppView()
+                currentPdfAdapter?.close()
+                currentPdfAdapter = null
+                currentActivePdfFile = null
+                showMainAppView()
+            }
+            override fun onAnimationRepeat(animation: Animation?) {}
+        })
+        readerBinding.root.startAnimation(exitAnim)
     }
 
     // ==========================================
     // FAZ 5: Ziyaretçi Profili ve Yorum Bottom Sheet
     // ==========================================
-    private fun openVisitorProfile(authorName: String, avatarUrl: String?) {
+    private fun openVisitorProfile(authorName: String, avatarUrl: String?, authorId: String? = null) {
         binding.fragmentContainer.visibility = View.VISIBLE
         binding.layoutBottomNav.root.visibility = View.GONE
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
             .replace(
                 R.id.fragment_container,
-                VisitorProfileFragment.newInstance(authorName, avatarUrl)
+                VisitorProfileFragment.newInstance(authorName, avatarUrl, authorId)
             )
             .addToBackStack("visitor_profile")
             .commit()
@@ -1536,7 +1595,8 @@ class MainActivity : AppCompatActivity() {
             postId = post.id,
             postTitle = post.title,
             postAuthor = post.authorName,
-            issueNumber = post.githubIssueId ?: 0L
+            issueNumber = post.githubIssueId ?: 0L,
+            postAuthorId = post.userId
         )
         dialog.onCommentAddedListener = {
             feedViewModel.refreshFromGitHub()
@@ -1552,8 +1612,18 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 splashViewModel.navigationState.collect { state ->
                     when (state) {
-                        SplashNavigationState.NavigateToDashboard -> showMainAppView()
-                        SplashNavigationState.NavigateToAuth -> showAuthScreen()
+                        SplashNavigationState.NavigateToDashboard -> {
+                            if (!isSplashHandled) {
+                                isSplashHandled = true
+                                showMainAppView()
+                            }
+                        }
+                        SplashNavigationState.NavigateToAuth -> {
+                            if (!isSplashHandled) {
+                                isSplashHandled = true
+                                showAuthScreen()
+                            }
+                        }
                         SplashNavigationState.Idle -> { /* Splash bekletiliyor */ }
                     }
                 }

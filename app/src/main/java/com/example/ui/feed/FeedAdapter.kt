@@ -29,7 +29,7 @@ class FeedAdapter(
     private val onLikeClicked: (PostEntity) -> Unit,
     private val onCommentClicked: (PostEntity) -> Unit,
     private val onReadPdfClicked: (PostEntity) -> Unit,
-    private val onAuthorClicked: ((authorName: String, avatarUrl: String?) -> Unit)? = null,
+    private val onAuthorClicked: ((authorName: String, avatarUrl: String?, authorId: String?) -> Unit)? = null,
     private val onDeletePostClicked: ((PostEntity) -> Unit)? = null,
     var currentUserId: String? = null,
     var currentUserName: String? = null
@@ -138,7 +138,7 @@ class FeedAdapter(
 
             // Tıklama Olayları
             val authorClickListener = {
-                onAuthorClicked?.invoke(post.authorName, post.authorAvatarUrl)
+                onAuthorClicked?.invoke(post.authorName, post.authorAvatarUrl, post.userId)
             }
             binding.ivAuthorAvatar.setOnClickListener { authorClickListener() }
             binding.tvAuthorName.setOnClickListener { authorClickListener() }

@@ -69,9 +69,18 @@ class IlmMirrorWidgetProvider : AppWidgetProvider() {
                 }
             }
 
+            views.setImageViewResource(R.id.iv_widget_background, R.drawable.widget_ilm_bg)
             views.setImageViewResource(R.id.iv_widget_status_icon, iconRes)
             views.setTextViewText(R.id.tv_widget_streak_badge, stateBadge)
             views.setTextViewText(R.id.tv_widget_quote, quote)
+
+            val subtitle = when (state) {
+                MotivationRepository.StreakState.ACTIVE -> "📜 Kesintisiz ilim halkasındasın"
+                MotivationRepository.StreakState.WARNING -> "⏳ Mütalaa vaktini kaçırma"
+                MotivationRepository.StreakState.DANGER -> "⚠️ Zinciri kırma, bir risale oku"
+                MotivationRepository.StreakState.ABANDONED -> "💨 İlim meclisi seni bekler, geri dön"
+            }
+            views.setTextViewText(R.id.tv_widget_status_subtitle, subtitle)
 
             // Widget'a tıklandığında MainActivity'yi aç
             val clickIntent = Intent(context, MainActivity::class.java).apply {

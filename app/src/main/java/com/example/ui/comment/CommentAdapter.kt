@@ -35,6 +35,8 @@ object CommentDiffCallback : DiffUtil.ItemCallback<DisplayComment>() {
 class CommentAdapter(
     private val currentUserName: String? = null,
     private val currentUserId: String? = null,
+    private val postAuthorName: String? = null,
+    private val postAuthorId: String? = null,
     private val onDeleteCommentClicked: ((DisplayComment) -> Unit)? = null
 ) : ListAdapter<DisplayComment, CommentAdapter.ViewHolder>(CommentDiffCallback) {
 
@@ -71,11 +73,21 @@ class CommentAdapter(
                 binding.ivCommentAvatar.setImageResource(R.drawable.ic_academic_logo)
             }
 
-            // Yorum Silme Opsiyonu (Yorum sahibine veya yerel kullanıcıya özel)
-            val isMyComment = (currentUserId != null && item.userId == currentUserId) ||
+            // Yorum Silme Opsiyonu (Yorum sahibine veya Risale / Gönderi sahibine özel)
+            val isCommentOwner = (currentUserId != null && item.userId == currentUserId) ||
                     (currentUserName != null && item.authorName.equals(currentUserName, ignoreCase = true))
 
-            if (isMyComment) {
+            val isPostOwner = (currentUserId != null && postAuthorId != null && currentUserId == postAuthorId) ||
+                    (currentUserName != null && postAuthorName != null && currentUserName.equals(postAuthorName, ignoreCase = true))
+
+            val canDelete = isCommentOwner || isPostOwner
+
+            if (canDelete) {
+                binding.btnCommentDelete.visibility = View.VISIBLE
+                binding.btnCommentDelete.setOnClickListener {
+                    onDeleteCommentClicked?.invoke(item)
+                }
+
                 binding.btnCommentOptions.visibility = View.VISIBLE
                 binding.btnCommentOptions.setOnClickListener { view ->
                     val popup = PopupMenu(context, view)
@@ -89,6 +101,8 @@ class CommentAdapter(
                     popup.show()
                 }
             } else {
+                binding.btnCommentDelete.visibility = View.GONE
+                binding.btnCommentDelete.setOnClickListener(null)
                 binding.btnCommentOptions.visibility = View.GONE
                 binding.btnCommentOptions.setOnClickListener(null)
             }

@@ -65,15 +65,21 @@ class FeedViewModel(
     private val _addPostState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
     val addPostState: StateFlow<AddPostUiState> = _addPostState.asStateFlow()
 
+    private val _followedAuthors = MutableStateFlow<List<String>>(emptyList())
+    val followedAuthors: StateFlow<List<String>> = _followedAuthors.asStateFlow()
+
     val posts: StateFlow<List<PostEntity>> = combine(
         feedRepository.getPostsFlow(),
         _selectedCategory,
-        _searchQuery
-    ) { allPosts, category, query ->
-        val categoryFiltered = if (category == "Tümü") {
-            allPosts
-        } else {
-            allPosts.filter { it.category.equals(category, ignoreCase = true) }
+        _searchQuery,
+        _followedAuthors
+    ) { allPosts, category, query, followed ->
+        val categoryFiltered = when {
+            category.equals("Tümü", ignoreCase = true) -> allPosts
+            category.equals("Takip Edilenler", ignoreCase = true) -> {
+                allPosts.filter { post -> followed.any { it.equals(post.authorName, ignoreCase = true) } }
+            }
+            else -> allPosts.filter { it.category.equals(category, ignoreCase = true) }
         }
 
         if (query.isBlank()) {
@@ -128,6 +134,10 @@ class FeedViewModel(
 
     fun selectCategory(category: String) {
         _selectedCategory.value = category
+    }
+
+    fun setFollowedAuthors(authors: List<String>) {
+        _followedAuthors.value = authors
     }
 
     fun setSearchQuery(query: String) {

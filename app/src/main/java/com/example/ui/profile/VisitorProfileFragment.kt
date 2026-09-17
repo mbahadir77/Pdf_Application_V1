@@ -35,6 +35,7 @@ class VisitorProfileFragment : Fragment() {
 
     private var authorName: String = ""
     private var avatarUrl: String? = null
+    private var authorId: String? = null
 
     private lateinit var feedAdapter: FeedAdapter
     private val badgeAdapter = AcademicBadgeAdapter { badge ->
@@ -47,12 +48,14 @@ class VisitorProfileFragment : Fragment() {
     companion object {
         private const val ARG_AUTHOR_NAME = "arg_author_name"
         private const val ARG_AVATAR_URL = "arg_avatar_url"
+        private const val ARG_AUTHOR_ID = "arg_author_id"
 
-        fun newInstance(authorName: String, avatarUrl: String?): VisitorProfileFragment {
+        fun newInstance(authorName: String, avatarUrl: String?, authorId: String? = null): VisitorProfileFragment {
             val fragment = VisitorProfileFragment()
             val args = Bundle().apply {
                 putString(ARG_AUTHOR_NAME, authorName)
                 putString(ARG_AVATAR_URL, avatarUrl)
+                putString(ARG_AUTHOR_ID, authorId)
             }
             fragment.arguments = args
             return fragment
@@ -63,6 +66,7 @@ class VisitorProfileFragment : Fragment() {
         super.onCreate(savedInstanceState)
         authorName = arguments?.getString(ARG_AUTHOR_NAME) ?: "İlim Ehli"
         avatarUrl = arguments?.getString(ARG_AVATAR_URL)
+        authorId = arguments?.getString(ARG_AUTHOR_ID)
     }
 
     override fun onCreateView(
@@ -107,13 +111,21 @@ class VisitorProfileFragment : Fragment() {
             },
             onCommentClicked = { _ -> },
             onReadPdfClicked = { post ->
-                NotificationHelper.showPdfReadNotification(
-                    requireContext().applicationContext,
-                    post.title,
-                    "Bir araştırmacı"
-                )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val db = AppDatabase.getInstance(requireContext())
+                    val currentUser = withContext(Dispatchers.IO) { db.userDao().getLastLoggedInUserDirect() }
+                    val currentUserName = currentUser?.fullName ?: "Bir araştırmacı"
+                    NotificationHelper.showPdfReadNotification(
+                        context = requireContext().applicationContext,
+                        pdfTitle = post.title,
+                        readerName = currentUserName,
+                        readerId = currentUser?.id,
+                        authorId = post.userId,
+                        targetPostId = post.id
+                    )
+                }
             },
-            onAuthorClicked = { _, _ -> /* Zaten bu profildeyiz */ }
+            onAuthorClicked = { _, _, _ -> /* Zaten bu profildeyiz */ }
         )
 
         binding.rvVisitorPdfs.layoutManager = LinearLayoutManager(requireContext())
@@ -165,13 +177,24 @@ class VisitorProfileFragment : Fragment() {
             // Giriş yapmış mevcut kullanıcı kimliğini al
             val currentUser = withContext(Dispatchers.IO) { db.userDao().getLastLoggedInUserDirect() }
             currentUserId = currentUser?.id ?: "current_user"
+            val currentUserName = currentUser?.fullName.orEmpty()
 
-            // Takip durumunu dinle
-            val following = withContext(Dispatchers.IO) {
-                db.followDao().isFollowingSync(currentUserId, authorName)
+            // Kendi profilini inceliyorsa Takip Et butonunu gizle (Self-Follow engelleme)
+            val isSelf = (authorId != null && authorId == currentUserId) ||
+                    (currentUser != null && authorId == currentUser.id) ||
+                    authorName.equals(currentUserName, ignoreCase = true)
+
+            if (isSelf) {
+                binding.btnVisitorFollow.visibility = View.GONE
+            } else {
+                binding.btnVisitorFollow.visibility = View.VISIBLE
+                // Takip durumunu dinle
+                val following = withContext(Dispatchers.IO) {
+                    db.followDao().isFollowingSync(currentUserId, authorName)
+                }
+                isFollowing = following
+                updateFollowButtonUI(isFollowing)
             }
-            isFollowing = following
-            updateFollowButtonUI(isFollowing)
 
             // Yazarın PDF gönderilerini çek
             val authorPosts = withContext(Dispatchers.IO) {

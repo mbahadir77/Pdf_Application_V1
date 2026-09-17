@@ -40,6 +40,7 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private var postId: String = ""
     private var postTitle: String = ""
     private var postAuthor: String = ""
+    private var postAuthorId: String? = null
     private var githubIssueNumber: Long = 0L
 
     var onCommentAddedListener: ((newCount: Int) -> Unit)? = null
@@ -48,19 +49,22 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         private const val ARG_POST_ID = "arg_post_id"
         private const val ARG_POST_TITLE = "arg_post_title"
         private const val ARG_POST_AUTHOR = "arg_post_author"
+        private const val ARG_POST_AUTHOR_ID = "arg_post_author_id"
         private const val ARG_ISSUE_NUMBER = "arg_issue_number"
 
         fun newInstance(
             postId: String,
             postTitle: String,
             postAuthor: String,
-            issueNumber: Long
+            issueNumber: Long,
+            postAuthorId: String? = null
         ): CommentsBottomSheetDialogFragment {
             val fragment = CommentsBottomSheetDialogFragment()
             val args = Bundle().apply {
                 putString(ARG_POST_ID, postId)
                 putString(ARG_POST_TITLE, postTitle)
                 putString(ARG_POST_AUTHOR, postAuthor)
+                putString(ARG_POST_AUTHOR_ID, postAuthorId)
                 putLong(ARG_ISSUE_NUMBER, issueNumber)
             }
             fragment.arguments = args
@@ -81,6 +85,7 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         postId = arguments?.getString(ARG_POST_ID) ?: ""
         postTitle = arguments?.getString(ARG_POST_TITLE) ?: ""
         postAuthor = arguments?.getString(ARG_POST_AUTHOR) ?: ""
+        postAuthorId = arguments?.getString(ARG_POST_AUTHOR_ID)
         githubIssueNumber = arguments?.getLong(ARG_ISSUE_NUMBER) ?: 0L
     }
 
@@ -105,6 +110,8 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             val adapter = CommentAdapter(
                 currentUserName = currentUser?.fullName,
                 currentUserId = currentUser?.id,
+                postAuthorName = postAuthor,
+                postAuthorId = postAuthorId,
                 onDeleteCommentClicked = { comment ->
                     deleteComment(comment)
                 }
@@ -134,6 +141,29 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 val db = AppDatabase.getInstance(requireContext())
+                // 1. Yerel Room DB'den sil
+                db.commentDao().deleteComment(comment.id)
+
+                // 2. GitHub Backend'den sil
+                try {
+                    RetrofitClient.gitHubService.deleteIssueComment(
+                        token = "token_bearer",
+                        owner = "mbahadir77",
+                        repo = "Pdf_Application_V1",
+                        commentId = comment.id
+                    )
+                } catch (_: Exception) {
+                    try {
+                        RetrofitClient.gitHubService.deleteIssueComment(
+                            token = "token_bearer",
+                            owner = "ilmnet-academic",
+                            repo = "ilmnet-feed",
+                            commentId = comment.id
+                        )
+                    } catch (_: Exception) {}
+                }
+
+                // 3. Post yorum sayısını güncelle
                 val post = db.postDao().getPostById(postId)
                 if (post != null) {
                     val updatedCount = (post.commentCount - 1).coerceAtLeast(0)
@@ -154,37 +184,62 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         lifecycleScope.launch {
             activeComments.clear()
+            val db = AppDatabase.getInstance(requireContext())
 
+            // 1. Yerel Room DB'den bu PDF'e ait yorumları çek
+            val localEntities = withContext(Dispatchers.IO) {
+                db.commentDao().getCommentsForPostDirect(postId)
+            }
+            localEntities.forEach { entity ->
+                activeComments.add(
+                    DisplayComment(
+                        id = entity.id,
+                        userId = entity.userId,
+                        authorName = entity.authorName,
+                        avatarUrl = entity.avatarUrl,
+                        body = entity.body,
+                        dateText = entity.dateText
+                    )
+                )
+            }
+
+            // 2. GitHub Issue'dan çek
             if (githubIssueNumber > 0) {
                 try {
                     val response = withContext(Dispatchers.IO) {
-                        RetrofitClient.gitHubService.getIssueComments(
-                            owner = "ilmnet-academic",
-                            repo = "ilmnet-feed",
-                            issueNumber = githubIssueNumber
-                        )
+                        try {
+                            RetrofitClient.gitHubService.getIssueComments(
+                                owner = "mbahadir77",
+                                repo = "Pdf_Application_V1",
+                                issueNumber = githubIssueNumber
+                            )
+                        } catch (_: Exception) {
+                            RetrofitClient.gitHubService.getIssueComments(
+                                owner = "ilmnet-academic",
+                                repo = "ilmnet-feed",
+                                issueNumber = githubIssueNumber
+                            )
+                        }
                     }
                     if (response.isSuccessful) {
                         val body = response.body()
                         if (!body.isNullOrEmpty()) {
                             body.forEach { comment ->
-                                activeComments.add(
-                                    DisplayComment(
-                                        id = comment.id,
-                                        authorName = comment.user?.login ?: "Araştırmacı",
-                                        avatarUrl = comment.user?.avatarUrl,
-                                        body = comment.body,
-                                        dateText = comment.createdAt?.take(10) ?: "Yeni"
+                                if (activeComments.none { it.id == comment.id }) {
+                                    activeComments.add(
+                                        DisplayComment(
+                                            id = comment.id,
+                                            authorName = comment.user?.login ?: "Araştırmacı",
+                                            avatarUrl = comment.user?.avatarUrl,
+                                            body = comment.body,
+                                            dateText = comment.createdAt?.take(10) ?: "Yeni"
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
                 } catch (_: Exception) {}
-            }
-
-            if (activeComments.isEmpty()) {
-                activeComments.addAll(getAcademicSeedComments(postTitle, postAuthor))
             }
 
             binding.shimmerComments.stopShimmer()
@@ -212,24 +267,52 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             val currentUserName = currentUser?.fullName ?: "İlmNet Araştırmacısı"
             val avatarUrl = currentUser?.avatarUrl
 
+            val commentId = System.currentTimeMillis()
             val dateStr = SimpleDateFormat("dd MMM yyyy • HH:mm", Locale("tr")).format(Date())
 
+            // 1. Yerel Room DB'ye kaydet
+            withContext(Dispatchers.IO) {
+                db.commentDao().insertComment(
+                    com.example.data.local.entity.CommentEntity(
+                        id = commentId,
+                        postId = postId,
+                        userId = currentUser?.id,
+                        authorName = currentUserName,
+                        avatarUrl = avatarUrl,
+                        body = commentText,
+                        dateText = dateStr,
+                        createdAt = commentId
+                    )
+                )
+            }
+
+            // 2. GitHub Issue'ya gönder
             if (githubIssueNumber > 0) {
                 try {
                     withContext(Dispatchers.IO) {
-                        RetrofitClient.gitHubService.createIssueComment(
-                            token = "token_bearer",
-                            owner = "ilmnet-academic",
-                            repo = "ilmnet-feed",
-                            issueNumber = githubIssueNumber,
-                            request = CreateGitHubCommentRequest(body = commentText)
-                        )
+                        try {
+                            RetrofitClient.gitHubService.createIssueComment(
+                                token = "token_bearer",
+                                owner = "mbahadir77",
+                                repo = "Pdf_Application_V1",
+                                issueNumber = githubIssueNumber,
+                                request = CreateGitHubCommentRequest(body = commentText)
+                            )
+                        } catch (_: Exception) {
+                            RetrofitClient.gitHubService.createIssueComment(
+                                token = "token_bearer",
+                                owner = "ilmnet-academic",
+                                repo = "ilmnet-feed",
+                                issueNumber = githubIssueNumber,
+                                request = CreateGitHubCommentRequest(body = commentText)
+                            )
+                        }
                     }
                 } catch (_: Exception) {}
             }
 
             val newComment = DisplayComment(
-                id = System.currentTimeMillis(),
+                id = commentId,
                 userId = currentUser?.id,
                 authorName = currentUserName,
                 avatarUrl = avatarUrl,
@@ -263,7 +346,8 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 context = requireContext().applicationContext,
                 pdfTitle = postTitle,
                 commenterName = currentUserName,
-                commentText = commentText
+                commentText = commentText,
+                targetPostId = postId
             )
 
             IlmToast.success(requireActivity(), "Akademik tahliliniz müzakere meclisine eklendi! 🖋️")

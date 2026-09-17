@@ -47,26 +47,32 @@ class FeedRepository(
     /**
      * Arka Planda GitHub API ile Senkronizasyon (Ağ Mantığı).
      * GitHub repository Issues listesinden akademik post havuzunu çeker.
-     * Yeni gelen verileri Room DB'ye kaydeder; Room Flow sayesinde UI anında otomatik güncellenir.
+     * Tüm kullanıcıların paylaştığı PDF'ler (farklı cihazlar/katılımcılar dahil)
+     * eksiksiz olarak Room DB'ye aktarılır ve ana akışta tarihe göre en yeni en üstte listelenir.
      */
     suspend fun syncWithGitHub(
-        owner: String = "ilmnet",
-        repo: String = "academic-papers"
+        owner: String = "mbahadir77",
+        repo: String = "Pdf_Application_V1"
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val response = gitHubService.getRepoIssues(owner, repo)
+            var response = gitHubService.getRepoIssues(owner, repo)
+            if (!response.isSuccessful && owner != "ilmnet") {
+                // Fallback repo denemesi
+                response = gitHubService.getRepoIssues("ilmnet", "academic-papers")
+            }
             if (response.isSuccessful) {
                 val issues = response.body().orEmpty()
                 if (issues.isNotEmpty()) {
                     val entities = issues.map { issue ->
                         val category = issue.labels?.firstOrNull()?.name ?: "Genel"
+                        val issueUserId = issue.user?.id?.toString() ?: "gh_${issue.user?.login ?: "user"}"
                         PostEntity(
                             id = "gh_issue_${issue.number}",
-                            userId = null,
+                            userId = issueUserId,
                             title = issue.title,
                             description = issue.body ?: "Açıklama belirtilmemiş.",
                             authorName = issue.user?.login ?: "Akademik Araştırmacı",
-                            authorTitle = "GitHub Akademik Katılımcısı",
+                            authorTitle = "İlim Diyârı Araştırmacısı",
                             authorAvatarUrl = issue.user?.avatarUrl,
                             category = category,
                             pdfUrl = "https://github.com/$owner/$repo/releases/download/v1.0/paper_${issue.number}.pdf",

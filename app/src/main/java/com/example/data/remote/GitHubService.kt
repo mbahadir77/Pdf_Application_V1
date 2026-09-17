@@ -59,4 +59,12 @@ interface GitHubService {
         @Path("issue_number") issueNumber: Long,
         @Body request: com.example.data.remote.model.CreateGitHubCommentRequest
     ): Response<com.example.data.remote.model.GitHubIssueComment>
+
+    @retrofit2.http.DELETE("repos/{owner}/{repo}/issues/comments/{comment_id}")
+    suspend fun deleteIssueComment(
+        @Header("Authorization") token: String,
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+        @Path("comment_id") commentId: Long
+    ): Response<Unit>
 }

@@ -25,6 +25,9 @@ object NotificationHelper {
     const val CHANNEL_SOCIAL_ID = "ilim_diyari_social_channel"
     private const val CHANNEL_SOCIAL_NAME = "İlim Diyârı Sosyal Etkileşim ve Rütbe Bildirimleri"
 
+    const val EXTRA_TARGET_POST_ID = "extra_target_post_id"
+    const val EXTRA_TARGET_AUTHOR = "extra_target_author"
+
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
@@ -159,57 +162,120 @@ object NotificationHelper {
 
     /**
      * Biri kullanıcının PDF'ini okumaya başladığında (Göz / Oku ikonuna bastığında).
+     * Yazar kendi PDF'ini okuduğunda (readerId == authorId) bildirim gönderilmez (Self-Spam engelleme).
      */
-    fun showPdfReadNotification(context: Context, pdfTitle: String, readerName: String = "Bir araştırmacı") {
+    fun showPdfReadNotification(
+        context: Context,
+        pdfTitle: String,
+        readerName: String = "Bir araştırmacı",
+        readerId: String? = null,
+        authorId: String? = null,
+        targetPostId: String? = null
+    ) {
+        if (readerId != null && authorId != null && readerId == authorId) {
+            return
+        }
         val wittyMessages = listOf(
             "$readerName senin '$pdfTitle' risaleni okumaya başladı. İlmin dalga dalga yayılıyor, durma! ✨",
             "'$pdfTitle' eserin masaya yatırıldı! Zihinler aydınlanıyor, yeni risaleyi ne zaman yüklüyorsun? 🧐",
             "Müjde! Biri az önce '$pdfTitle' eserinden istifade etmeye başladı. Sadaka-i cariyen işliyor! 📖"
         )
         val message = wittyMessages[Random.nextInt(wittyMessages.size)]
-        sendSocialNotification(context, "Eserin Okunuyor! 👁️", message, 2001)
+        sendSocialNotification(
+            context = context,
+            title = "Eserin Okunuyor! 👁️",
+            message = message,
+            notificationId = 2001,
+            targetPostId = targetPostId
+        )
     }
 
     /**
      * PDF'e yeni yorum geldiğinde OS Push bildirimi.
      */
-    fun showCommentNotification(context: Context, pdfTitle: String, commenterName: String, commentText: String) {
+    fun showCommentNotification(
+        context: Context,
+        pdfTitle: String,
+        commenterName: String,
+        commentText: String,
+        targetPostId: String? = null
+    ) {
         val wittyMessages = listOf(
             "$commenterName, '$pdfTitle' risalene tahlil bıraktı: \"$commentText\". Hemen cevap ver, meclisi dağıtma! 💬",
             "Tartışma alevlendi! $commenterName eserin hakkında fikrini beyan etti. Alimler müzakereyi sever, haydi katıl! ✍️",
             "Yeni bir akademik münazara başladı! $commenterName yorum yaptı: \"$commentText\""
         )
         val message = wittyMessages[Random.nextInt(wittyMessages.size)]
-        sendSocialNotification(context, "Akademik Yorum Geldi! 🖋️", message, 2002)
+        sendSocialNotification(
+            context = context,
+            title = "Akademik Yorum Geldi! 🖋️",
+            message = message,
+            notificationId = 2002,
+            targetPostId = targetPostId
+        )
     }
 
     /**
      * PDF'e beğeni geldiğinde OS Push bildirimi.
      */
-    fun showLikeNotification(context: Context, pdfTitle: String, likerName: String) {
+    fun showLikeNotification(
+        context: Context,
+        pdfTitle: String,
+        likerName: String,
+        targetPostId: String? = null
+    ) {
         val message = "$likerName, '$pdfTitle' çalışmana gıpta ile kalp bıraktı. İlmin bereketi daim olsun! ❤️"
-        sendSocialNotification(context, "Risalen Beğenildi! ✨", message, 2003)
+        sendSocialNotification(
+            context = context,
+            title = "Risalen Beğenildi! ✨",
+            message = message,
+            notificationId = 2003,
+            targetPostId = targetPostId
+        )
     }
 
     /**
      * Takip edilen kişi yeni PDF yüklediğinde.
      */
-    fun showFollowedAuthorUploadedPdf(context: Context, authorName: String, pdfTitle: String) {
+    fun showFollowedAuthorUploadedPdf(
+        context: Context,
+        authorName: String,
+        pdfTitle: String,
+        targetPostId: String? = null
+    ) {
         val message = "Takip ettiğin $authorName yeni bir risale neşretti: '$pdfTitle'. İlk mütalaa eden sen ol! 🚀"
-        sendSocialNotification(context, "Takip Ettiğin Hoca Eser Paylaştı! 📜", message, 2004)
+        sendSocialNotification(
+            context = context,
+            title = "Takip Ettiğin Hoca Eser Paylaştı! 📜",
+            message = message,
+            notificationId = 2004,
+            targetPostId = targetPostId,
+            targetAuthorName = authorName
+        )
     }
 
     /**
      * Takip edilen kişi rozet kazandığında.
      */
-    fun showFollowedUserEarnedBadge(context: Context, authorName: String, badgeName: String, tierName: String) {
+    fun showFollowedUserEarnedBadge(
+        context: Context,
+        authorName: String,
+        badgeName: String,
+        tierName: String
+    ) {
         val wittyMessages = listOf(
             "Rakibin $authorName az önce $badgeName alanında $tierName rozeti aldı, sen hala uyuyor musun? 👀",
             "$authorName ilim basamaklarını tırmanıyor ($tierName rozeti kazandı). Ona tebrik yazmak ister misin? 🎖️",
             "İlim yarışında bayrak el değiştirdi! $authorName $tierName rütbesine yükseldi. Gayret vakti! 💎"
         )
         val message = wittyMessages[Random.nextInt(wittyMessages.size)]
-        sendSocialNotification(context, "Akademik Rütbe Bildirimi! 🏆", message, 2005)
+        sendSocialNotification(
+            context = context,
+            title = "Akademik Rütbe Bildirimi! 🏆",
+            message = message,
+            notificationId = 2005,
+            targetAuthorName = authorName
+        )
     }
 
     private fun sendSocialNotification(
@@ -217,16 +283,24 @@ object NotificationHelper {
         title: String,
         message: String,
         notificationId: Int,
-        type: String = "SOCIAL"
+        type: String = "SOCIAL",
+        targetPostId: String? = null,
+        targetAuthorName: String? = null
     ) {
         // Yerel Room DB'ye geçmiş bildirimi kaydet
-        saveNotificationToDatabase(context, title, message, type)
+        saveNotificationToDatabase(context, title, message, type, targetPostId = targetPostId)
 
         if (!com.example.ui.settings.AppSettingsPreferences.getInstance(context).isSocialNotificationsEnabled) {
             return
         }
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            if (targetPostId != null) {
+                putExtra(EXTRA_TARGET_POST_ID, targetPostId)
+            }
+            if (targetAuthorName != null) {
+                putExtra(EXTRA_TARGET_AUTHOR, targetAuthorName)
+            }
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
