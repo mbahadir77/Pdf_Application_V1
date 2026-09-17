@@ -110,7 +110,7 @@
                     android:background="@drawable/bg_glass_badge"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="5dp"
-                    android:text="✨ Yıldırım Technologies Tarafından Geliştirilmiştir"
+                    android:text=" Yıldırım Technologies Tarafından Geliştirilmiştir"
                     android:textColor="@color/gold_start"
                     android:textSize="12sp"
                     android:textStyle="bold" />

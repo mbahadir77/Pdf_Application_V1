@@ -271,22 +271,7 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun getAcademicSeedComments(title: String, author: String): List<DisplayComment> {
-        return listOf(
-            DisplayComment(
-                id = 101L,
-                authorName = "Prof. Dr. İhsan Süreyya",
-                avatarUrl = null,
-                body = "$author hocamızın bu eseri ($title) usul araştırmacıları için çok kıymetli. Özellikle isnad tenkidi bölümü çok doyurucu.",
-                dateText = "Dün • 16:30"
-            ),
-            DisplayComment(
-                id = 102L,
-                authorName = "Dr. Zeynep Bilgin",
-                avatarUrl = null,
-                body = "Metin tahlilinde kullanılan lügavî kaynaklar zenginleştirilmiş. Emeğinize sağlık, istifade ettik.",
-                dateText = "3 saat önce"
-            )
-        )
+        return emptyList() // Sahte akademik yorumlar kaldırıldı
     }
 
     override fun onDestroyView() {

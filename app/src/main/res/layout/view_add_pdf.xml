@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Makale / Risale Başlığı *"
+                android:text="Kitap / Makale Başlığı *"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -58,7 +58,7 @@
                 android:layout_height="50dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_glass_input_selector"
-                android:hint="Örn: Klasik Dönem Tefsir Yöntemleri"
+                android:hint="Örn: Ana Hatlarıyla Kelâm Tarihi"
                 android:imeOptions="actionNext"
                 android:inputType="textCapSentences"
                 android:paddingHorizontal="14dp"
@@ -71,7 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Akademik Alan / Kategori *"
+                android:text=" Kategori *"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -228,7 +228,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_glass_input_selector"
                 android:gravity="top|start"
-                android:hint="Makalenin metodolojisi, kaynakları ve ulaştığı temel akademik bulgular..."
+                android:hint="Kitabın metodolojisi, kaynakları veya Gayesi..."
                 android:inputType="textMultiLine"
                 android:padding="12dp"
                 android:textColor="@color/text_primary"
@@ -240,7 +240,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:text="Akademik PDF Belgesi *"
+                android:text=" PDF Dosyası *"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -362,7 +362,7 @@
                 android:background="@drawable/btn_academic_gold_selector"
                 android:letterSpacing="0.04"
                 android:stateListAnimator="@null"
-                android:text="Akademik Akışta Yayınla"
+                android:text="İlim Diyârında Yayınla"
                 android:textAllCaps="false"
                 android:textColor="@color/btn_text_dark"
                 android:textSize="14sp"

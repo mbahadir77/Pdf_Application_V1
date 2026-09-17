@@ -50,7 +50,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Akademik Kimlik &amp; Özgeçmiş"
+                    android:text=" Kimlik &amp; Özgeçmiş"
                     android:textColor="@color/gold_start"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -149,7 +149,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Akademik Unvan &amp; Bölüm"
+                android:text=" Unvan &amp; Bölüm"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -160,7 +160,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_glass_input_selector"
-                android:hint="Örn: Doç. Dr. • İlahiyat Fakültesi Tefsir ABD"
+                android:hint="Örn: Doç. Dr. • İlahiyat Fakültesi Tefsir "
                 android:imeOptions="actionNext"
                 android:inputType="text"
                 android:paddingHorizontal="14dp"
@@ -173,7 +173,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Akademik Özgeçmiş &amp; İlgi Alanları"
+                android:text=" Özgeçmiş &amp; İlgi Alanları"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -185,7 +185,7 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_glass_input_selector"
                 android:gravity="top|start"
-                android:hint="Çalışma alanlarınız, akademik araştırmalarınız ve yayınlarınız hakkında kısa bir özet..."
+                android:hint="Çalışma alanlarınız,  araştırmalarınız ve yayınlarınız hakkında kısa bir özet..."
                 android:inputType="textMultiLine"
                 android:lineSpacingExtra="3dp"
                 android:padding="14dp"

@@ -22,7 +22,7 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
-
+/*
   signingConfigs {
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -30,17 +30,20 @@ android {
       keyAlias = "androiddebugkey"
       keyPassword = "android"
     }
-  }
+  }*/
 
   buildTypes {
+    // BURADAKİ DEBUG BLOĞUNU TAMAMEN SİLDİK VEYA YORUMA ALDIK
+    /*
     debug {
       signingConfig = signingConfigs.getByName("debugConfig")
     }
+    */
+
     release {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-
       // signingConfig = signingConfigs.getByName("release")
     }
   }
