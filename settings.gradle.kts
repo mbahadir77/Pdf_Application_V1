@@ -22,7 +22,7 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "İlmNet"
+rootProject.name = "İlim Diyârı"
 
 
 include(":app")

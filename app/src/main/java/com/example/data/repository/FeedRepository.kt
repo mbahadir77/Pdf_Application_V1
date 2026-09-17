@@ -132,7 +132,7 @@ class FeedRepository(
             title = title.trim(),
             description = description.trim(),
             authorName = authorName.ifBlank { "Araştırmacı" },
-            authorTitle = authorTitle.ifBlank { "İlmNet Akademik Üyesi" },
+            authorTitle = authorTitle.ifBlank { "İlim Diyârı Akademik Üyesi" },
             authorAvatarUrl = null,
             category = category,
             pdfUrl = pdfUrl.trim(),

@@ -5,28 +5,26 @@
     android:id="@+id/card_badge_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    android:background="@drawable/bg_badge_unlocked"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_glass_card"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="12dp">
 
-    <!-- Üst Başlık ve Rütbe İndikatörü -->
+    <!-- Üst Satır: Kategori İkonu, Adı ve Seviye Rozeti (LVL X) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <!-- Rozet / Rütbe İkonu (Bakır 🥉, Gümüş 🥈, Altın 🥇, Elmas 💎) -->
         <TextView
             android:id="@+id/tv_badge_tier_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="6dp"
             android:textSize="18sp"
-            tools:text="💎" />
+            tools:text="📜" />
 
-        <!-- Kategori / İlim Dalı İkonu & Adı -->
         <TextView
             android:id="@+id/tv_badge_category"
             android:layout_width="0dp"
@@ -35,42 +33,55 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/gold_vibrant"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
-            tools:text="Tefsir" />
+            tools:text="Hadis" />
 
-        <!-- Rütbe / Kademe Rozeti -->
+        <!-- 20 Seviye Göstergesi Rozeti (LVL 1 - 20) -->
         <TextView
-            android:id="@+id/tv_badge_tier_title"
+            android:id="@+id/tv_badge_level_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_glass_badge"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp"
-            android:textColor="@color/gold_start"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="2dp"
+            android:textColor="@color/gold_vibrant"
             android:textSize="10sp"
             android:textStyle="bold"
-            tools:text="Müfessir" />
+            tools:text="LVL 13" />
     </LinearLayout>
 
-    <!-- İlim Dalı Açıklaması -->
+    <!-- Rütbe Unvanı (Örn: Muhaddis, Fakih, Allâme) -->
+    <TextView
+        android:id="@+id/tv_badge_tier_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        tools:text="Muhaddis" />
+
+    <!-- Dinamik Rütbe Açıklaması -->
     <TextView
         android:id="@+id/tv_badge_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="3dp"
         android:ellipsize="end"
-        android:maxLines="1"
+        android:maxLines="2"
         android:textColor="@color/text_tertiary"
         android:textSize="10sp"
-        tools:text="Kur'an İlimleri &amp; Dirayet Tefsiri" />
+        tools:text="Muhaddis: 13 Hadis eseri mütalaa ettin/paylaştın." />
 
-    <!-- Yıldız / Kademe Göstergeleri (1-4 Yıldız) -->
+    <!-- 4 Kademeli Yıldızlar (Gizli veya Seviye Temsilcisi) -->
     <LinearLayout
         android:id="@+id/layout_badge_stars"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:orientation="horizontal">
 
         <TextView
@@ -78,7 +89,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="⭐"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/tv_badge_star2"
@@ -86,7 +97,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:text="⭐"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/tv_badge_star3"
@@ -94,7 +105,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:text="⭐"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/tv_badge_star4"
@@ -102,7 +113,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:text="⭐"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
     </LinearLayout>
 
     <!-- İlerleme Çubuğu -->
@@ -110,17 +121,17 @@
         android:id="@+id/pb_badge_progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="5dp"
+        android:layout_marginTop="6dp"
         android:max="100"
-        android:progress="60"
+        android:progress="65"
         android:progressTint="@color/gold_vibrant" />
 
-    <!-- Hedef Sayacı (Örn: 12/15 Eser) -->
+    <!-- Alt Bilgi: Eser Sayacı ve Sıradaki Rütbe -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -129,9 +140,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/gold_start"
-            android:textSize="11sp"
+            android:textSize="10sp"
             android:textStyle="bold"
-            tools:text="12/15 Eser" />
+            tools:text="13/16 Eser" />
 
         <View
             android:layout_width="0dp"
@@ -142,9 +153,11 @@
             android:id="@+id/tv_badge_next_tier_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="@color/text_tertiary"
             android:textSize="9sp"
-            tools:text="Hedef: Hâfız" />
+            tools:text="Hedef: Müdekkik-i Sünnet" />
     </LinearLayout>
 
 </LinearLayout>

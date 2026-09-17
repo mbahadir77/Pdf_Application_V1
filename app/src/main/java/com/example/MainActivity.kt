@@ -60,6 +60,7 @@ import com.example.ui.comment.CommentsBottomSheetDialogFragment
 import com.example.ui.common.IlmToast
 import com.example.ui.notification.MotivationWorker
 import com.example.ui.notification.NotificationHelper
+import com.example.ui.notification.WisdomNotificationWorker
 import com.example.ui.profile.AcademicBadgeAdapter
 import com.example.ui.profile.VisitorProfileFragment
 import com.example.ui.reader.HighlighterDrawingView
@@ -68,7 +69,10 @@ import com.example.ui.reader.PdfPageAdapter
 import com.example.ui.reader.PdfSearchEngine
 import com.example.ui.reader.PdfSearchResultAdapter
 import com.example.ui.splash.SplashNavigationEvent
+import com.example.ui.splash.SplashNavigationState
 import com.example.ui.splash.SplashViewModel
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.ui.settings.AboutBottomSheetDialogFragment
 import com.example.ui.settings.AppSettingsPreferences
 import com.example.ui.settings.AppTheme
@@ -122,13 +126,15 @@ class MainActivity : AppCompatActivity() {
     private var selectedAddPostCategory = "Tefsir"
     private var currentPdfAdapter: PdfPageAdapter? = null
     private var currentActivePdfFile: File? = null
+    private var previousBadgeLevels: Map<String, Int>? = null
 
-    // FAZ 7: Android 13+ Gerçek Sistem Bildirimleri İzni
+    // FAZ 7 & 9: Android 13+ Gerçek Sistem Bildirimleri İzni & Hikmet Bildirimi
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             NotificationHelper.createNotificationChannels(this)
+            WisdomNotificationWorker.schedule(this)
         }
     }
 
@@ -139,7 +145,7 @@ class MainActivity : AppCompatActivity() {
         uri?.let { handlePdfSelected(it) }
     }
 
-    private var selectedAvatarUri: Uri? = null
+    private var selectedAvatarPath: String? = null
     private var selectedPdfCoverPath: String? = null
 
     // FAZ 5 REVİZYONU: WhatsApp Tarzı 1:1 Yuvarlak/Kare Görsel Kırpıcı (CanHub Cropper)
@@ -197,8 +203,8 @@ class MainActivity : AppCompatActivity() {
                     inputStream.copyTo(out)
                 }
                 withContext(Dispatchers.Main) {
-                    selectedAvatarUri = Uri.fromFile(targetFile)
-                    displayAvatar(binding.viewEditProfile.ivEditAvatarPreview, selectedAvatarUri?.toString())
+                    selectedAvatarPath = targetFile.absolutePath
+                    displayAvatar(binding.viewEditProfile.ivEditAvatarPreview, selectedAvatarPath)
                     Toast.makeText(this@MainActivity, "Kırpılan fotoğraf hazırlandı.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
@@ -220,10 +226,12 @@ class MainActivity : AppCompatActivity() {
             PdfSearchEngine.init(applicationContext)
         }
 
-        // FAZ 5 & 7: Bildirim Kanalları & 2 Günde Bir Motivasyon & Android 13+ İzin
+        // FAZ 5, 7 & 9: Bildirim Kanalları & 48 Saat İnaktivite Hikmet Bildirimi & Android 13+ İzin
         NotificationHelper.createNotificationChannels(this)
+        WisdomNotificationWorker.schedule(this)
         MotivationWorker.schedule(this)
         checkNotificationPermission()
+        com.example.data.pref.SessionManager(this).updateLastActiveTime()
 
         setupWindowInsets()
         setupAuthInteractions()
@@ -255,6 +263,11 @@ class MainActivity : AppCompatActivity() {
         observeFeedState()
         observeEditProfileState()
         observeNotificationsCount()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        com.example.data.pref.SessionManager(this).updateLastActiveTime()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -592,13 +605,13 @@ class MainActivity : AppCompatActivity() {
             val name = editBinding.etEditName.text?.toString().orEmpty()
             val title = editBinding.etEditTitle.text?.toString().orEmpty()
             val bio = editBinding.etEditBio.text?.toString().orEmpty()
-            val avatarUriStr = selectedAvatarUri?.toString()
+            val avatarPath = selectedAvatarPath ?: authViewModel.currentUser.value?.avatarUrl
 
             authViewModel.updateProfile(
                 fullName = name,
                 academicTitle = title,
                 bio = bio,
-                avatarUrl = avatarUriStr
+                avatarUrl = avatarPath
             )
         }
     }
@@ -771,7 +784,7 @@ class MainActivity : AppCompatActivity() {
             editBinding.etEditName.setText(user.fullName)
             editBinding.etEditTitle.setText(user.academicTitle.orEmpty())
             editBinding.etEditBio.setText(user.bio.orEmpty())
-            selectedAvatarUri = if (!user.avatarUrl.isNullOrBlank()) Uri.parse(user.avatarUrl) else null
+            selectedAvatarPath = user.avatarUrl
             displayAvatar(editBinding.ivEditAvatarPreview, user.avatarUrl)
         }
         editBinding.tvEditProfileError.visibility = View.GONE
@@ -818,15 +831,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun displayAvatar(imageView: ImageView, avatarUrl: String?) {
         if (!avatarUrl.isNullOrBlank()) {
-            try {
-                val uri = Uri.parse(avatarUrl)
-                imageView.setImageURI(null)
-                imageView.setImageURI(uri)
-            } catch (e: Exception) {
-                imageView.setImageResource(R.drawable.ic_person_outline)
+            val model: Any = if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://") || avatarUrl.startsWith("content://") || avatarUrl.startsWith("file://")) {
+                avatarUrl
+            } else {
+                val f = File(avatarUrl)
+                if (f.exists()) f else avatarUrl
+            }
+            imageView.load(model) {
+                crossfade(true)
+                placeholder(R.drawable.ic_person_outline)
+                error(R.drawable.ic_person_outline)
+                transformations(CircleCropTransformation())
             }
         } else {
-            imageView.setImageResource(R.drawable.ic_person_outline)
+            imageView.load(R.drawable.ic_person_outline) {
+                transformations(CircleCropTransformation())
+            }
         }
     }
 
@@ -1186,7 +1206,7 @@ class MainActivity : AppCompatActivity() {
             val authorTitle = if (!currentUser?.githubUsername.isNullOrBlank()) {
                 "@${currentUser?.githubUsername} • Akademik Araştırmacı"
             } else {
-                "İlmNet Araştırmacısı"
+                "İlim Diyârı Araştırmacısı"
             }
 
             feedViewModel.createPost(
@@ -1219,42 +1239,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handlePdfSelected(uri: Uri) {
-        var fileName = "secilen_belge.pdf"
-        var fileSizeFormatted = "Bilinmeyen boyut"
+        lifecycleScope.launch {
+            var fileName = "secilen_belge.pdf"
+            var fileSizeFormatted = "PDF Belgesi"
 
-        try {
-            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-                if (cursor.moveToFirst()) {
-                    if (nameIndex != -1) {
-                        fileName = cursor.getString(nameIndex) ?: fileName
-                    }
-                    if (sizeIndex != -1) {
-                        val sizeBytes = cursor.getLong(sizeIndex)
-                        fileSizeFormatted = formatFileSize(sizeBytes)
+            try {
+                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (cursor.moveToFirst()) {
+                        if (nameIndex != -1) {
+                            fileName = cursor.getString(nameIndex) ?: fileName
+                        }
+                        if (sizeIndex != -1) {
+                            val sizeBytes = cursor.getLong(sizeIndex)
+                            fileSizeFormatted = formatFileSize(sizeBytes)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
 
-        // FAZ 8: PdfRenderer ile 1. Sayfa Kapak Önizlemesini Arka Planda Üret
-        lifecycleScope.launch {
-            try {
-                selectedPdfCoverPath = PdfDocumentHelper.renderPdfUriThumbnail(this@MainActivity, uri)
-            } catch (_: Exception) {}
-        }
+            // GÜVENLİ FİZİKSEL KOPYALAMA:
+            // content:// URI'sini uygulamanın filesDir/academic_pdfs/ dizinine kopyala
+            val copyResult = PdfDocumentHelper.copyPdfUriToInternalStorage(this@MainActivity, uri, fileName)
+            if (copyResult.isSuccess) {
+                val copiedFile = copyResult.getOrThrow()
+                val permanentPath = copiedFile.absolutePath
+                val actualSize = formatFileSize(copiedFile.length())
 
-        feedViewModel.setSelectedPdfFile(
-            SelectedPdfFile(
-                uriString = uri.toString(),
-                fileName = fileName,
-                fileSizeFormatted = fileSizeFormatted
-            )
-        )
-        IlmToast.success(this, "PDF seçildi: $fileName", title = "Belge Hazır 📄")
+                // 1. Sayfa Kapak Önizlemesini Kopyalanan Kalıcı Dosyadan Üret
+                try {
+                    selectedPdfCoverPath = PdfDocumentHelper.renderPdfFirstPageThumbnail(this@MainActivity, copiedFile)
+                } catch (_: Exception) {}
+
+                feedViewModel.setSelectedPdfFile(
+                    SelectedPdfFile(
+                        uriString = permanentPath, // Kalıcı fiziksel dosya yolu (SecurityException engellendi)
+                        fileName = fileName,
+                        fileSizeFormatted = actualSize
+                    )
+                )
+                IlmToast.success(this@MainActivity, "PDF güvenle hazırlandı: $fileName", title = "Belge Hazır 📄")
+            } else {
+                Toast.makeText(
+                    this@MainActivity,
+                    "PDF kopyalanamadı: ${copyResult.exceptionOrNull()?.localizedMessage}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     private fun formatFileSize(bytes: Long): String {
@@ -1515,10 +1550,11 @@ class MainActivity : AppCompatActivity() {
     private fun observeNavigation() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                splashViewModel.navigationEvent.collect { event ->
-                    when (event) {
-                        SplashNavigationEvent.NavigateToDashboard -> showMainAppView()
-                        SplashNavigationEvent.NavigateToAuth -> showAuthScreen()
+                splashViewModel.navigationState.collect { state ->
+                    when (state) {
+                        SplashNavigationState.NavigateToDashboard -> showMainAppView()
+                        SplashNavigationState.NavigateToAuth -> showAuthScreen()
+                        SplashNavigationState.Idle -> { /* Splash bekletiliyor */ }
                     }
                 }
             }
@@ -1538,8 +1574,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAppUpdateDialog(info: com.example.ui.splash.VersionUpdateInfo) {
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("✨ Yeni İlmNet Sürümü Mevcut! (${info.latestVersion})")
-            .setMessage("Cihazınızdaki sürüm: ${info.currentVersion}\nEn son sürüm: ${info.latestVersion}\n\n${info.releaseNotes}\n\nİlmNet'in en güncel ilmi veri tabanına, akademik rozet yeniliklerine ve performans güncellemelerine erişmek için şimdi güncelleyin.")
+            .setTitle("✨ Yeni İlim Diyârı Sürümü Mevcut! (${info.latestVersion})")
+            .setMessage("Cihazınızdaki sürüm: ${info.currentVersion}\nEn son sürüm: ${info.latestVersion}\n\n${info.releaseNotes}\n\nİlim Diyârı'nın en güncel ilmi veri tabanına, akademik rozet yeniliklerine ve performans güncellemelerine erişmek için şimdi güncelleyin.")
             .setPositiveButton("Şimdi Güncelle") { _, _ ->
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.releaseUrl))
@@ -1602,7 +1638,7 @@ class MainActivity : AppCompatActivity() {
                         val dashBinding = binding.viewDashboard
                         dashBinding.tvDashUserName.text = user.fullName
                         dashBinding.tvDashUserEmail.text = user.email
-                        dashBinding.tvDashUserTitle.text = user.academicTitle ?: "Araştırmacı • İlmNet Portali"
+                        dashBinding.tvDashUserTitle.text = user.academicTitle ?: "Araştırmacı • İlim Diyârı Portali"
                         if (!user.bio.isNullOrBlank()) {
                             dashBinding.tvDashUserBio.text = user.bio
                             dashBinding.tvDashUserBio.visibility = View.VISIBLE
@@ -1648,6 +1684,10 @@ class MainActivity : AppCompatActivity() {
                             snackbar.setActionTextColor(ContextCompat.getColor(this@MainActivity, R.color.gold_vibrant))
                             snackbar.setAction("Tamam") { snackbar.dismiss() }
                             snackbar.show()
+
+                            // Profil ekranındaki ve Dashboard'daki avatarı direkt güncelle
+                            displayAvatar(binding.viewDashboard.ivDashAvatar, state.user.avatarUrl)
+                            binding.viewDashboard.tvDashUserName.text = state.user.fullName
 
                             authViewModel.resetEditProfileState()
                             closeEditProfileScreen()
@@ -1777,7 +1817,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // FAZ 4: 20 Kategori Akademik Rozet Matrisi
+                // FAZ 4 & 9: 20 Kategori Akademik Rozet Matrisi ve Dış Sistem Bildirimleri
                 launch {
                     feedViewModel.badges.collect { badgeList ->
                         academicBadgeAdapter.submitList(badgeList)
@@ -1785,14 +1825,34 @@ class MainActivity : AppCompatActivity() {
                         val unlockedCount = badgeList.count { it.isUnlocked }
                         dashBinding.tvDashStatsBadgesCount.text = "$unlockedCount/20"
 
-                        val maxTier = badgeList.maxOfOrNull { it.currentTier } ?: 0
-                        dashBinding.tvDashStatsLevel.text = when (maxTier) {
-                            4 -> "💎 Elmas (50+ Risale)"
-                            3 -> "🥇 Altın (15+ Risale)"
-                            2 -> "🥈 Gümüş (5+ Risale)"
-                            1 -> "🥉 Bakır (1+ Risale)"
+                        val maxLevel = badgeList.maxOfOrNull { it.level } ?: 0
+                        dashBinding.tvDashStatsLevel.text = when {
+                            maxLevel >= 20 -> "💎 Seviye 20 • Allâme (Zirve)"
+                            maxLevel >= 16 -> "💎 Elmas (Seviye $maxLevel)"
+                            maxLevel >= 11 -> "🥇 Altın (Seviye $maxLevel)"
+                            maxLevel >= 6 -> "🥈 Gümüş (Seviye $maxLevel)"
+                            maxLevel >= 1 -> "🥉 Bakır (Seviye $maxLevel)"
                             else -> "🔒 Mübtedî"
                         }
+
+                        // Rozet seviye artışı / yeni rozet kazanımı durumunda OS Push Bildirimi gönder
+                        val currentMap = badgeList.associate { it.category to it.level }
+                        val prevMap = previousBadgeLevels
+                        if (prevMap != null) {
+                            for (badge in badgeList) {
+                                val oldLevel = prevMap[badge.category] ?: 0
+                                if (badge.level > oldLevel && badge.isUnlocked) {
+                                    NotificationHelper.showBadgeUnlockedNotification(
+                                        context = this@MainActivity,
+                                        categoryName = badge.category,
+                                        rankTitle = badge.rankTitle,
+                                        level = badge.level,
+                                        icon = badge.icon
+                                    )
+                                }
+                            }
+                        }
+                        previousBadgeLevels = currentMap
                     }
                 }
             }

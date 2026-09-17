@@ -55,13 +55,16 @@ class IlmMirrorWidgetProvider : AppWidgetProvider() {
 
             // Duruma göre ikon ve başlık belirleme
             val (iconRes, stateBadge) = when (state) {
-                MotivationRepository.WidgetState.ACTIVE -> {
+                MotivationRepository.StreakState.ACTIVE -> {
                     Pair(R.drawable.ic_widget_active, "🔥 $streakCount Gün İstikrar")
                 }
-                MotivationRepository.WidgetState.WARNING -> {
+                MotivationRepository.StreakState.WARNING -> {
                     Pair(R.drawable.ic_widget_warning, "⏳ Rölanti • $streakCount Gün")
                 }
-                MotivationRepository.WidgetState.ABANDONED -> {
+                MotivationRepository.StreakState.DANGER -> {
+                    Pair(R.drawable.ic_widget_warning, "⚠️ Tehlike • $streakCount Gün")
+                }
+                MotivationRepository.StreakState.ABANDONED -> {
                     Pair(R.drawable.ic_widget_abandoned, "💨 Terk Edilmiş")
                 }
             }

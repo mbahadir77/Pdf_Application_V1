@@ -1,226 +1,164 @@
 package com.example.data.category
 
 /**
- * İlmNet - Merkezi Kategori ve İlim Dalları Yöneticisi (Faz 7).
- * AddPdf (Eser Ekleme), Profile (Rozet ve Rütbe Motoru), Keşfet ve İstatistik
- * ekranlarındaki tam 20 kategoriyi tek bir kaynaktan yönetir.
+ * İlim Diyârı - Merkezi Kategori ve İlim Dalları Yöneticisi (FAZ 9 Mega Update).
+ * Uygulamanın 20 nihai kategorisini tek merkezden yönetir.
+ * AddPdf (PDF Ekleme), Keşfet, Filtre Çipleri ve AcademicBadgeEngine
+ * SADECE bu merkezi liste üzerinden beslenir.
  */
 data class AcademicCategory(
     val id: String,
     val name: String,
     val icon: String,
     val description: String,
-    val tier1Title: String = "Talip",
-    val tier2Title: String,
-    val tier3Title: String,
-    val tier4Title: String = "Allâme"
+    val shortCode: String = id
 )
 
 object CategoryManager {
 
     /**
-     * İlmNet platformunun resmi ve tam 20 kategorisi.
+     * İlim Diyârı nihai, sabit ve resmi 20 kategorisi:
+     * 1. Tefsir
+     * 2. Hadis
+     * 3. Fıkıh
+     * 4. Siyer
+     * 5. Akaid
+     * 6. Kelâm
+     * 7. Tefsir Usulü
+     * 8. Hadis Usulü
+     * 9. Usul-ü Fıkıh
+     * 10. Arapça Dil Bilgisi (Sarf-Nahv)
+     * 11. Kıraat
+     * 12. Tasavvuf
+     * 13. Tarih
+     * 14. Mantık/Felsefe
+     * 15. Roman
+     * 16. Makale/Dergi
+     * 17. Tez
+     * 18. Özet
+     * 19. Sözlük
+     * 20. Diğer
      */
     val CATEGORIES: List<AcademicCategory> = listOf(
-        AcademicCategory(
-            id = "akaid",
-            name = "Akaid",
-            icon = "🏛️",
-            description = "İman Esasları, İtikad ve Tevhid İncelemeleri",
-            tier1Title = "Talip",
-            tier2Title = "Muakkid",
-            tier3Title = "Mütefekkir",
-            tier4Title = "Allâme"
-        ),
         AcademicCategory(
             id = "tefsir",
             name = "Tefsir",
             icon = "📖",
-            description = "Kur'an-ı Kerim İlimleri, Nüzul ve Dirayet Tefsirleri",
-            tier1Title = "Talip",
-            tier2Title = "Müfessir",
-            tier3Title = "Hâfız-ı Kelâm",
-            tier4Title = "Allâme"
+            description = "Kur'an-ı Kerim İlimleri, Nüzul, Garîb ve Dirayet Tefsirleri"
         ),
         AcademicCategory(
             id = "hadis",
             name = "Hadis",
             icon = "📜",
-            description = "Nebevi Rivayetler, Metin ve Senet Tahlilleri",
-            tier1Title = "Talip",
-            tier2Title = "Muhaddis",
-            tier3Title = "Hâfız",
-            tier4Title = "Allâme"
+            description = "Nebevi Rivayetler, Metin ve Senet Tahlilleri, Kütüb-i Sitte"
         ),
         AcademicCategory(
             id = "fikih",
             name = "Fıkıh",
             icon = "⚖️",
-            description = "İslam Hukuku, Furû-ı Fıkıh ve Mukayeseli Ahkam",
-            tier1Title = "Talip",
-            tier2Title = "Fakih",
-            tier3Title = "Müçtehid",
-            tier4Title = "Allâme"
+            description = "İslam Hukuku, Furû-ı Fıkıh, Muamelat ve Mukayeseli Ahkâm"
         ),
         AcademicCategory(
             id = "siyer",
             name = "Siyer",
             icon = "🌙",
-            description = "Asr-ı Saadet, Peygamberler Tarihi ve Sahabe Hayatı",
-            tier1Title = "Talip",
-            tier2Title = "Siyerci",
-            tier3Title = "Tarihçi",
-            tier4Title = "Allâme"
+            description = "Asr-ı Saadet, Megâzi, Peygamberler Tarihi ve Sahabe Hayatı"
         ),
         AcademicCategory(
-            id = "mantik",
-            name = "Mantık",
-            icon = "🧠",
-            description = "Klasik ve Modern Mantık, Kıyas ve Delil Teorisi",
-            tier1Title = "Talip",
-            tier2Title = "Mantıkî",
-            tier3Title = "Burhan",
-            tier4Title = "Allâme"
+            id = "akaid",
+            name = "Akaid",
+            icon = "🏛️",
+            description = "İman Esasları, İtikad, Tevhid ve Ehl-i Sünnet İnancı"
         ),
         AcademicCategory(
-            id = "belagat",
-            name = "Belagat",
-            icon = "🪶",
-            description = "Meani, Beyan ve Bedi' İlimleri, Edebi Fesahat",
-            tier1Title = "Talip",
-            tier2Title = "Edip",
-            tier3Title = "Belig",
-            tier4Title = "Allâme"
+            id = "kelam",
+            name = "Kelâm",
+            icon = "🛡️",
+            description = "Akli Deliller, İtikadi Münazaralar ve Teolojik Felsefe"
+        ),
+        AcademicCategory(
+            id = "tefsir_usulu",
+            name = "Tefsir Usulü",
+            icon = "📐",
+            description = "Kur'an İlimleri Metodolojisi, İ'caz, Vahiy ve Nüzul Esasları"
+        ),
+        AcademicCategory(
+            id = "hadis_usulu",
+            name = "Hadis Usulü",
+            icon = "🔍",
+            description = "Cerh ve Ta'dil, Mustalahu'l-Hadis, İlel ve Rical İlmi"
+        ),
+        AcademicCategory(
+            id = "usul_u_fikih",
+            name = "Usul-ü Fıkıh",
+            icon = "⚖️",
+            description = "İslam Hukuk Metodolojisi, Kıyas, İstinbat ve Makâsıd"
+        ),
+        AcademicCategory(
+            id = "sarf_nahv",
+            name = "Arapça Dil Bilgisi (Sarf-Nahv)",
+            icon = "✒️",
+            description = "Sarf, Nahiv, İ'rab, İştikak, Meânî ve Belâgat Kaideleri"
+        ),
+        AcademicCategory(
+            id = "kiraat",
+            name = "Kıraat",
+            icon = "🎙️",
+            description = "Kıraat-i Aşere ve Takrib, Tecvid, Tertil ve Mahreç İlimleri"
         ),
         AcademicCategory(
             id = "tasavvuf",
             name = "Tasavvuf",
             icon = "🕯️",
-            description = "İslam İrfanı, Nefis Tezkiyesi ve Manevi Seyir",
-            tier1Title = "Talip",
-            tier2Title = "Salik",
-            tier3Title = "Arif",
-            tier4Title = "Allâme"
+            description = "İslam İrfanı, Nefis Tezkiyesi, Ahlak ve Manevi Seyr-i Sülûk"
         ),
         AcademicCategory(
-            id = "islam_tarihi",
-            name = "İslam Tarihi",
+            id = "tarih",
+            name = "Tarih",
             icon = "🕌",
-            description = "Hilafet Dönemleri, Medeniyet ve Kurumlar Tarihi",
-            tier1Title = "Talip",
-            tier2Title = "Tarihçi",
-            tier3Title = "Vakkas",
-            tier4Title = "Allâme"
+            description = "İslam Tarihi, Medeniyetler, Vak'anüvislik ve Tarih Felsefesi"
         ),
         AcademicCategory(
-            id = "usul_u_fikih",
-            name = "Usul-ü Fıkıh",
-            icon = "📐",
-            description = "İslam Hukuk Metodolojisi, Kıyas ve İstinbat Esasları",
-            tier1Title = "Talip",
-            tier2Title = "Usûlcü",
-            tier3Title = "Muhakkik",
-            tier4Title = "Allâme"
+            id = "mantik_felsefe",
+            name = "Mantık/Felsefe",
+            icon = "🧠",
+            description = "Klasik ve Modern Mantık, Burhan, Kıyas ve Hikmet Felsefesi"
         ),
         AcademicCategory(
-            id = "usul_u_hadis",
-            name = "Usul-ü Hadis",
-            icon = "🔍",
-            description = "Cerh ve Ta'dil, Hadis Istılahları ve Rical İlmi",
-            tier1Title = "Talip",
-            tier2Title = "Ricalî",
-            tier3Title = "Müdekkik",
-            tier4Title = "Allâme"
+            id = "roman",
+            name = "Roman",
+            icon = "📚",
+            description = "Edebi Eserler, Klasik ve Modern Romanlar, Hikaye ve Kurgu"
         ),
         AcademicCategory(
-            id = "felsefe",
-            name = "Felsefe",
-            icon = "🌌",
-            description = "İslam Felsefesi, Hikmet, Meşşailik ve İşrakilik",
-            tier1Title = "Talip",
-            tier2Title = "Feylesof",
-            tier3Title = "Hâkim",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "dinler_tarihi",
-            name = "Dinler Tarihi",
-            icon = "🌐",
-            description = "Mukayeseli Dinler, Kadim İnanışlar ve Teolojik Doktrinler",
-            tier1Title = "Talip",
-            tier2Title = "Mukayeseci",
-            tier3Title = "Din Bilimci",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "arap_dili",
-            name = "Arap Dili ve Edebiyatı",
-            icon = "✒️",
-            description = "Nahiv, Sarf, Lugat, Filoloji ve Şiir Divanları",
-            tier1Title = "Talip",
-            tier2Title = "Lugavî",
-            tier3Title = "Üstat",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "islami_sanatlar",
-            name = "İslami Sanatlar",
-            icon = "🎨",
-            description = "Hüsn-i Hat, Tezhip, Ebru, Minyatür ve Mimari",
-            tier1Title = "Talip",
-            tier2Title = "Hattat/Sanatkâr",
-            tier3Title = "Üstat Sanatkâr",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "osmanlica_metinler",
-            name = "Osmanlıca Metinler",
-            icon = "📜",
-            description = "Osmanlı Türkçesi Risaleler, Matbu ve El Yazmaları",
-            tier1Title = "Talip",
-            tier2Title = "Müstensih",
-            tier3Title = "Paleograf",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "makaleler",
-            name = "Makaleler",
+            id = "makale_dergi",
+            name = "Makale/Dergi",
             icon = "📑",
-            description = "Hakemli Akademik Makaleler ve Araştırma Yazıları",
-            tier1Title = "Talip",
-            tier2Title = "Yazar",
-            tier3Title = "Müellif",
-            tier4Title = "Allâme"
-        ),
-        AcademicCategory(
-            id = "dergiler",
-            name = "Dergiler",
-            icon = "📰",
-            description = "İlmi, Fikri ve Akademik Süreli Yayınlar",
-            tier1Title = "Talip",
-            tier2Title = "Muharrir",
-            tier3Title = "Başyazar",
-            tier4Title = "Allâme"
+            description = "Hakemli Akademik Makaleler, Dergiler ve Süreli Yayınlar"
         ),
         AcademicCategory(
             id = "tez",
             name = "Tez",
             icon = "🎓",
-            description = "Yüksek Lisans, Doktora ve Doçentlik Tezleri",
-            tier1Title = "Talip",
-            tier2Title = "Tez Yazarı",
-            tier3Title = "Doktor/Doçent",
-            tier4Title = "Allâme"
+            description = "Yüksek Lisans, Doktora, Uzmanlık ve Doçentlik Tezleri"
+        ),
+        AcademicCategory(
+            id = "ozet",
+            name = "Özet",
+            icon = "📋",
+            description = "Kitap Özetleri, Hülasalar, Ders Notları ve Veciz Derlemeler"
+        ),
+        AcademicCategory(
+            id = "sozluk",
+            name = "Sözlük",
+            icon = "📖",
+            description = "Kamuslar, Istılah Lugatları, Ansiklopedik ve Terminoloji Sözlükleri"
         ),
         AcademicCategory(
             id = "diger",
             name = "Diğer",
-            icon = "📚",
-            description = "Disiplinlerarası İlmi Çalışmalar ve Çeviriler",
-            tier1Title = "Talip",
-            tier2Title = "Mütercim",
-            tier3Title = "Müstakil Araştırmacı",
-            tier4Title = "Allâme"
+            icon = "✨",
+            description = "Disiplinlerarası İlmi Çalışmalar, Risaleler ve Çeviriler"
         )
     )
 
@@ -230,10 +168,11 @@ object CategoryManager {
     val CATEGORY_NAMES: List<String> = CATEGORIES.map { it.name }
 
     /**
-     * İsimle kategori bulma (büyük/küçük harf duyarsız).
+     * İsimle kategori bulma (büyük/küçük harf duyarsız, kısmi eşleşme destekli).
      */
     fun findCategory(query: String): AcademicCategory? {
         val trimmed = query.trim()
+        if (trimmed.isEmpty()) return null
         return CATEGORIES.firstOrNull {
             it.name.equals(trimmed, ignoreCase = true) ||
                     it.id.equals(trimmed, ignoreCase = true)

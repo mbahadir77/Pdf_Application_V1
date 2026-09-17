@@ -90,7 +90,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="İlmNet"
+                    android:text="İlim Diyârı"
                     android:textColor="@color/gold_vibrant"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -121,7 +121,7 @@
                     android:layout_marginTop="10dp"
                     android:gravity="center"
                     android:lineSpacingExtra="3dp"
-                    android:text="İlmNet, ilahiyat ve İslami ilimler alanında akademik makale, risale ve tezlerin açık kaynak GitHub mimarisiyle dağıtık olarak paylaşıldığı, çevrimdışı öncelikli (Offline-First) ilmi sosyal ağdır."
+                    android:text="İlim Diyârı, ilahiyat ve İslami ilimler alanında akademik makale, risale ve tezlerin açık kaynak GitHub mimarisiyle dağıtık olarak paylaşıldığı, çevrimdışı öncelikli (Offline-First) ilmi sosyal ağdır."
                     android:textColor="@color/text_tertiary"
                     android:textSize="11sp" />
             </LinearLayout>

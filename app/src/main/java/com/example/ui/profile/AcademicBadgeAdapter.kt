@@ -21,13 +21,8 @@ object AcademicBadgeDiffCallback : DiffUtil.ItemCallback<AcademicBadge>() {
 }
 
 /**
- * İlmNet - 20 Akademik Kategori Rozet Matrisi Adaptörü (FAZ 8: ListAdapter + DiffUtil).
- * IndexOutOfBounds çökmelerini ve bellek sızıntılarını önler.
- * 4 Kademeli Askeri Rütbe Hiyerarşisi:
- * - Bakır (1): Mat koyu bakır (#CD7F32) 🥉
- * - Metal/Gümüş (5): Parlak metalik gri (#C0C0C0) 🥈
- * - Altın (15): Göz alıcı ışıltılı altın (#FFD700) 🥇
- * - Elmas (50): Parlayan elmas/kristal mavi (#00E5FF) 💎
+ * İlim Diyârı - 20 Kademeli Dev Rozet ve Rütbe Adaptörü (FAZ 9 Mega Update).
+ * Glassmorphic kartlar, 20 seviyelik ilerleme ve rütbe gösterimi.
  */
 class AcademicBadgeAdapter(
     private val onBadgeClick: ((AcademicBadge) -> Unit)? = null
@@ -63,58 +58,65 @@ class AcademicBadgeAdapter(
 
             if (badge.isUnlocked) {
                 binding.cardBadgeRoot.alpha = 1.0f
-                val tierColor = Color.parseColor(badge.tierColorHex)
+                val tierColor = try {
+                    Color.parseColor(badge.tierColorHex)
+                } catch (e: Exception) {
+                    Color.parseColor("#FFD700")
+                }
 
+                // Seviye Etiketi (Örn: LVL 14)
+                binding.tvBadgeLevelTag.text = "LVL ${badge.level}"
+                binding.tvBadgeLevelTag.visibility = View.VISIBLE
+                binding.tvBadgeLevelTag.setTextColor(tierColor)
+
+                // Rütbe Başlığı
+                binding.tvBadgeTierTitle.text = badge.rankTitle
+                binding.tvBadgeTierTitle.setTextColor(tierColor)
+
+                // Arka plan: Elmas / Altın / Gümüş / Bakır
                 when (badge.currentTier) {
                     4 -> {
-                        // Elmas Rozet (Usta / Zirve) - Mavi-Beyaz Kristal
+                        // Elmas Zirve (Seviye 16-20)
                         binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_diamond)
                         binding.tvBadgeCategory.setTextColor(tierColor)
-                        binding.tvBadgeTierTitle.setTextColor(tierColor)
                         binding.tvBadgeProgressCounter.setTextColor(tierColor)
                         binding.pbBadgeProgress.progressTintList = ColorStateList.valueOf(tierColor)
                     }
                     3 -> {
-                        // Altın Rozet (İleri) - Parlak Işıltılı Altın #FFD700
+                        // Altın Kademe (Seviye 11-15)
                         binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_unlocked)
                         binding.tvBadgeCategory.setTextColor(ContextCompat.getColor(context, R.color.gold_vibrant))
-                        binding.tvBadgeTierTitle.setTextColor(ContextCompat.getColor(context, R.color.gold_start))
                         binding.tvBadgeProgressCounter.setTextColor(ContextCompat.getColor(context, R.color.gold_start))
                         binding.pbBadgeProgress.progressTintList = ColorStateList.valueOf(tierColor)
                     }
                     2 -> {
-                        // Gümüş / Metal Rozet (Orta) - Parlak Metalik Gri #C0C0C0
+                        // Gümüş Kademe (Seviye 6-10)
                         binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_unlocked)
                         binding.tvBadgeCategory.setTextColor(Color.parseColor("#E2E8F0"))
-                        binding.tvBadgeTierTitle.setTextColor(Color.parseColor("#E2E8F0"))
                         binding.tvBadgeProgressCounter.setTextColor(Color.parseColor("#CBD5E1"))
                         binding.pbBadgeProgress.progressTintList = ColorStateList.valueOf(tierColor)
                     }
                     else -> {
-                        // Bakır Rozet (Başlangıç) - Mat Koyu Bakır #CD7F32
+                        // Bakır Kademe (Seviye 1-5)
                         binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_bronze)
                         binding.tvBadgeCategory.setTextColor(tierColor)
-                        binding.tvBadgeTierTitle.setTextColor(tierColor)
                         binding.tvBadgeProgressCounter.setTextColor(tierColor)
                         binding.pbBadgeProgress.progressTintList = ColorStateList.valueOf(tierColor)
                     }
                 }
 
-                binding.tvBadgeTierTitle.text = "${badge.tierTitle} (${badge.tierCategoryName})"
-                binding.tvBadgeTierTitle.setBackgroundResource(R.drawable.bg_glass_badge)
-
-                // Yıldızları rütbeye göre güncelle (1..4)
+                // Yıldızlar
                 binding.layoutBadgeStars.visibility = View.VISIBLE
-                binding.tvBadgeStar1.text = if (badge.currentTier >= 1) "⭐" else "☆"
-                binding.tvBadgeStar2.text = if (badge.currentTier >= 2) "⭐" else "☆"
-                binding.tvBadgeStar3.text = if (badge.currentTier >= 3) "⭐" else "☆"
-                binding.tvBadgeStar4.text = if (badge.currentTier >= 4) "⭐" else "☆"
+                binding.tvBadgeStar1.text = if (badge.level >= 5) "⭐" else "☆"
+                binding.tvBadgeStar2.text = if (badge.level >= 10) "⭐" else "☆"
+                binding.tvBadgeStar3.text = if (badge.level >= 15) "⭐" else "☆"
+                binding.tvBadgeStar4.text = if (badge.level >= 20) "⭐" else "☆"
 
-                if (badge.nextTierTitle != null) {
-                    binding.tvBadgeNextTierHint.text = "Sıradaki: ${badge.nextTierTitle}"
+                if (badge.nextRankTitle != null) {
+                    binding.tvBadgeNextTierHint.text = "Sıradaki: ${badge.nextRankTitle}"
                     binding.tvBadgeNextTierHint.visibility = View.VISIBLE
                 } else {
-                    binding.tvBadgeNextTierHint.text = "Zirve Rütbe (Elmas)"
+                    binding.tvBadgeNextTierHint.text = "Zirve Rütbe 💎"
                     binding.tvBadgeNextTierHint.visibility = View.VISIBLE
                 }
             } else {
@@ -122,14 +124,15 @@ class AcademicBadgeAdapter(
                 binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_locked)
                 binding.cardBadgeRoot.alpha = 0.5f
                 binding.tvBadgeCategory.setTextColor(Color.parseColor("#A0AEC0"))
-                binding.tvBadgeTierTitle.text = "🔒 Kilitli"
+                binding.tvBadgeLevelTag.text = "🔒 Kilitli"
+                binding.tvBadgeLevelTag.setTextColor(Color.parseColor("#718096"))
+                binding.tvBadgeTierTitle.text = "Mübtedî (Kilitli)"
                 binding.tvBadgeTierTitle.setTextColor(Color.parseColor("#718096"))
-                binding.tvBadgeTierTitle.background = null
                 binding.tvBadgeProgressCounter.setTextColor(Color.parseColor("#718096"))
                 binding.pbBadgeProgress.progressTintList = ColorStateList.valueOf(Color.parseColor("#4A5568"))
 
                 binding.layoutBadgeStars.visibility = View.GONE
-                binding.tvBadgeNextTierHint.text = "Hedef: Bakır (1 Eser)"
+                binding.tvBadgeNextTierHint.text = "Hedef: 1 Eser (${badge.nextRankTitle ?: "Aç"})"
                 binding.tvBadgeNextTierHint.visibility = View.VISIBLE
             }
         }

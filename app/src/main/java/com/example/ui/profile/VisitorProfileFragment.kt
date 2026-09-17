@@ -38,7 +38,7 @@ class VisitorProfileFragment : Fragment() {
 
     private lateinit var feedAdapter: FeedAdapter
     private val badgeAdapter = AcademicBadgeAdapter { badge ->
-        IlmToast.info(requireActivity(), badge.description, title = "${badge.category} • ${badge.tierCategoryName}")
+        IlmToast.info(requireActivity(), badge.description, title = "${badge.category} • Seviye ${badge.level}: ${badge.rankTitle} ${badge.tierIcon}")
     }
 
     private var isFollowing = false

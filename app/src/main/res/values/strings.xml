@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">İlmNet</string>
+    <string name="app_name">İlim Diyârı</string>
     <string name="tag_line">Akademik PDF Sosyal Ağı</string>
     <string name="splash_motto">Bilgi Paylaştıkça Çoğalır • Offline-First</string>
     <string name="tab_login">Giriş Yap</string>
@@ -14,7 +14,7 @@
     <string name="btn_login">Giriş Yap</string>
     <string name="btn_register">Kayıt Ol ve Başla</string>
     <string name="btn_logout">Oturumu Kapat</string>
-    <string name="status_persistent_session">Kalıcı Oturum: EncryptedSharedPreferences</string>
+    <string name="status_persistent_session">Kalıcı Oturum: SharedPreferences</string>
     <string name="status_room_ready">Yerel Veritabanı: Room DB (UserEntity)</string>
     <string name="status_github_ready">Ağ İstemcisi: Retrofit (api.github.com)</string>
     <string name="label_academic_profile">Akademik Profil Kartı</string>
@@ -25,7 +25,7 @@
     <string name="error_user_not_found">Kullanıcı bulunamadı. Lütfen önce kayıt olun.</string>
     <string name="error_user_already_exists">Bu e-posta adresiyle zaten bir kullanıcı kayıtlı.</string>
     <string name="success_registered">Akademik hesap başarıyla oluşturuldu!</string>
-    <string name="widget_ilm_mirror_desc">İlmNet İlim Aynası - Günlük streak ve hikmetli motivasyon aynası</string>
+    <string name="widget_ilm_mirror_desc">İlim Diyârı İlim Aynası - Günlük streak ve hikmetli motivasyon aynası</string>
     <string name="title_notifications">İlmi Bildirim Merkezi</string>
 </resources>
 

@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.04"
-                android:text="İlmNet Akış"
+                android:text="İlim Diyârı Akış"
                 android:textColor="@color/gold_vibrant"
                 android:textSize="20sp"
                 android:textStyle="bold" />

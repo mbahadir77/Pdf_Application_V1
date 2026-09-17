@@ -8,12 +8,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
 /**
- * İlmNet Kimlik Doğrulama ve Kullanıcı Deposu (Offline-First).
- * Room DB ve EncryptedSharedPreferences ile entegre çalışır.
+ * İlim Diyârı Kimlik Doğrulama ve Kullanıcı Deposu (Offline-First).
+ * Room DB ve SharedPreferences ile entegre çalışır.
  */
 class AuthRepository(
     private val userDao: UserDao,
@@ -26,9 +27,11 @@ class AuthRepository(
     fun getCurrentUserFlow(): Flow<UserEntity?> {
         return _currentUserIdFlow.flatMapLatest { id ->
             if (id != null) {
-                userDao.getUserById(id)
+                userDao.getUserById(id).map { dbUser ->
+                    dbUser ?: sessionManager.toUserEntity()
+                }
             } else {
-                flowOf(null)
+                flowOf(sessionManager.toUserEntity())
             }
         }
     }

@@ -20,6 +20,19 @@ import java.io.FileOutputStream
 object PdfDocumentHelper {
 
     suspend fun preparePdfFile(context: Context, post: PostEntity): File = withContext(Dispatchers.IO) {
+        // 0. Eğer post.pdfUrl doğrudan var olan yerel bir dosya yoluna işaret ediyorsa direkt döndür!
+        if (post.pdfUrl.isNotBlank() && !post.pdfUrl.startsWith("http://") && !post.pdfUrl.startsWith("https://")) {
+            val localPath = if (post.pdfUrl.startsWith("file://")) {
+                Uri.parse(post.pdfUrl).path ?: ""
+            } else {
+                post.pdfUrl
+            }
+            val localFile = File(localPath)
+            if (localFile.exists() && localFile.length() > 0) {
+                return@withContext localFile
+            }
+        }
+
         val safeFileName = "academic_${post.id.replace(Regex("[^a-zA-Z0-9_]"), "_")}.pdf"
         val targetFile = File(context.cacheDir, safeFileName)
 
@@ -48,6 +61,37 @@ object PdfDocumentHelper {
         // 3. Android PdfDocument ile çok sayfalı zengin akademik PDF belgesi oluştur
         generateAcademicPdf(targetFile, post)
         return@withContext targetFile
+    }
+
+    /**
+     * Cihazdan seçilen content:// URI'sini uygulamanın güvenli filesDir klasörüne
+     * fiziksel olarak kopyalar ve kalıcı mutlak dosya nesnesini döndürür.
+     * URI izin hatalarını (SecurityException) tamamen engeller.
+     */
+    suspend fun copyPdfUriToInternalStorage(
+        context: Context,
+        uri: Uri,
+        originalFileName: String
+    ): Result<File> = withContext(Dispatchers.IO) {
+        try {
+            val pdfDir = File(context.filesDir, "academic_pdfs").apply { if (!exists()) mkdirs() }
+            val cleanName = originalFileName.replace(Regex("[^a-zA-Z0-9._-]"), "_").take(50)
+            val targetFile = File(pdfDir, "pdf_${System.currentTimeMillis()}_$cleanName")
+
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
+            } ?: return@withContext Result.failure(Exception("PDF dosyası açılamadı veya izin verilmedi."))
+
+            if (targetFile.exists() && targetFile.length() > 0) {
+                Result.success(targetFile)
+            } else {
+                Result.failure(Exception("Kopyalanan PDF dosyası boş."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     private fun generateAcademicPdf(outputFile: File, post: PostEntity) {

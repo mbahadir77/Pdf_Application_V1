@@ -14,14 +14,16 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 /**
- * İlmNet - Akıllı Sosyal Bildirim & Duolingo Tarzı Bildirim Yöneticisi (Faz 5).
+ * İlim Diyârı - Dış Sistem Bildirim Yöneticisi (OS Push Notifications & WorkManager).
+ * Beğeni, yorum, rozet kazanımı ve 48 saatlik hareketsizlikte hikmet bildirimlerini
+ * Android İşletim Sistemi bildirimleri (NotificationManager / NotificationCompat) olarak iletir.
  */
 object NotificationHelper {
 
-    const val CHANNEL_MOTIVATION_ID = "ilmnet_motivation_channel"
-    private const val CHANNEL_MOTIVATION_NAME = "İlmNet İlmi Motivasyon Bildirimleri"
-    const val CHANNEL_SOCIAL_ID = "ilmnet_social_channel"
-    private const val CHANNEL_SOCIAL_NAME = "İlmNet Sosyal Etkileşim ve Rozet Bildirimleri"
+    const val CHANNEL_MOTIVATION_ID = "ilim_diyari_motivation_channel"
+    private const val CHANNEL_MOTIVATION_NAME = "İlim Diyârı Hikmet & Motivasyon Bildirimleri"
+    const val CHANNEL_SOCIAL_ID = "ilim_diyari_social_channel"
+    private const val CHANNEL_SOCIAL_NAME = "İlim Diyârı Sosyal Etkileşim ve Rütbe Bildirimleri"
 
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -33,7 +35,7 @@ object NotificationHelper {
                 CHANNEL_MOTIVATION_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "2 günde bir ilim, tefekkür ve Duolingo tarzı esprili dürtmeler"
+                description = "48 saat hareketsizlik hikmet bildirimleri ve ilmi tefekkür dürtmeleri"
                 enableLights(true)
                 lightColor = android.graphics.Color.parseColor("#FFD700")
                 enableVibration(true)
@@ -47,7 +49,7 @@ object NotificationHelper {
                 CHANNEL_SOCIAL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "PDF okuma, yorum, beğeni ve rozet sosyal bildirimleri"
+                description = "PDF okuma, yorum, beğeni ve 20 seviyeli rozet kazanımı bildirimleri"
                 enableLights(true)
                 lightColor = android.graphics.Color.parseColor("#FFD700")
                 enableVibration(true)
@@ -62,17 +64,53 @@ object NotificationHelper {
     }
 
     /**
-     * WorkManager tarafından 2 günde bir tetiklenen periyodik motivasyon bildirimi.
+     * 48 saatten uzun süre uygulamaya girmeyen kullanıcıya gönderilen Dış Sistem (OS Push) Hikmet Bildirimi.
+     */
+    fun showWisdomNotification(context: Context, quoteText: String) {
+        val title = "📜 İlim Meclisi Seni Özledi! • İlim Diyârı"
+        val body = quoteText
+
+        saveNotificationToDatabase(context, title, body, "WISDOM")
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            1002,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_MOTIVATION_ID)
+            .setSmallIcon(R.drawable.ic_academic_logo)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1002, notification)
+    }
+
+    /**
+     * WorkManager tarafından tetiklenen periyodik motivasyon bildirimi.
      */
     fun showPeriodicMotivationNotification(context: Context) {
         if (!com.example.ui.settings.AppSettingsPreferences.getInstance(context).isMotivationNotificationsEnabled) {
             return
         }
         val quote = MotivationQuotes.getRandomQuote()
-        val title = "İlmNet Vakti 📚 • ${quote.source}"
+        val title = "İlim Diyârı Vakti 📚 • ${quote.source}"
         val body = quote.text
 
-        // FAZ 8: Geçmiş bildirimler merkezine de kaydet
         saveNotificationToDatabase(context, title, body, "MOTIVATION")
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -104,6 +142,22 @@ object NotificationHelper {
     }
 
     /**
+     * Rozet ve rütbe kazanımı olduğunda cihazın üst panelinden (OS Push Notification) bildirim gönderir.
+     */
+    fun showBadgeUnlockedNotification(
+        context: Context,
+        categoryName: String,
+        rankTitle: String,
+        level: Int,
+        icon: String = "🎖️"
+    ) {
+        val title = "🏆 Yeni Akademik Rütbe! ($icon $categoryName)"
+        val message = "Tebrikler! Seviye $level: '$rankTitle' unvanına yükseldiniz. Meclis sizinle iftihar ediyor! ✨"
+        val notificationId = 3000 + Math.abs(categoryName.hashCode() % 1000)
+        sendSocialNotification(context, title, message, notificationId, type = "BADGE")
+    }
+
+    /**
      * Biri kullanıcının PDF'ini okumaya başladığında (Göz / Oku ikonuna bastığında).
      */
     fun showPdfReadNotification(context: Context, pdfTitle: String, readerName: String = "Bir araştırmacı") {
@@ -117,7 +171,7 @@ object NotificationHelper {
     }
 
     /**
-     * PDF'e yeni yorum geldiğinde.
+     * PDF'e yeni yorum geldiğinde OS Push bildirimi.
      */
     fun showCommentNotification(context: Context, pdfTitle: String, commenterName: String, commentText: String) {
         val wittyMessages = listOf(
@@ -130,7 +184,7 @@ object NotificationHelper {
     }
 
     /**
-     * PDF'e beğeni geldiğinde.
+     * PDF'e beğeni geldiğinde OS Push bildirimi.
      */
     fun showLikeNotification(context: Context, pdfTitle: String, likerName: String) {
         val message = "$likerName, '$pdfTitle' çalışmana gıpta ile kalp bıraktı. İlmin bereketi daim olsun! ❤️"
@@ -158,15 +212,21 @@ object NotificationHelper {
         sendSocialNotification(context, "Akademik Rütbe Bildirimi! 🏆", message, 2005)
     }
 
-    private fun sendSocialNotification(context: Context, title: String, message: String, notificationId: Int, type: String = "SOCIAL") {
-        // FAZ 8: Room DB'ye geçmiş bildirimi kaydet
+    private fun sendSocialNotification(
+        context: Context,
+        title: String,
+        message: String,
+        notificationId: Int,
+        type: String = "SOCIAL"
+    ) {
+        // Yerel Room DB'ye geçmiş bildirimi kaydet
         saveNotificationToDatabase(context, title, message, type)
 
         if (!com.example.ui.settings.AppSettingsPreferences.getInstance(context).isSocialNotificationsEnabled) {
             return
         }
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
             context,

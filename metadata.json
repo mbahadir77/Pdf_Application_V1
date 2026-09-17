@@ -1,5 +1,5 @@
 {
-  "name": "İlmNet",
+  "name": "İlim Diyârı",
   "description": "Akademik PDF Sosyal Ağı - Offline-first, GitHub API ve Releases tabanlı akademik platform",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

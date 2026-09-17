@@ -26,6 +26,12 @@ sealed class SplashNavigationEvent {
     object NavigateToDashboard : SplashNavigationEvent()
 }
 
+sealed class SplashNavigationState {
+    object Idle : SplashNavigationState()
+    object NavigateToAuth : SplashNavigationState()
+    object NavigateToDashboard : SplashNavigationState()
+}
+
 data class VersionUpdateInfo(
     val hasUpdate: Boolean,
     val latestVersion: String,
@@ -38,7 +44,10 @@ class SplashViewModel(
     private val repository: AuthRepository
 ) : ViewModel() {
 
-    private val _navigationEvent = MutableSharedFlow<SplashNavigationEvent>()
+    private val _navigationState = MutableStateFlow<SplashNavigationState>(SplashNavigationState.Idle)
+    val navigationState: StateFlow<SplashNavigationState> = _navigationState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<SplashNavigationEvent>(replay = 1)
     val navigationEvent: SharedFlow<SplashNavigationEvent> = _navigationEvent.asSharedFlow()
 
     private val _updateInfo = MutableStateFlow<VersionUpdateInfo?>(null)
@@ -49,13 +58,17 @@ class SplashViewModel(
         checkForGitHubReleaseUpdate()
     }
 
+    fun isUserLoggedIn(): Boolean = repository.isLoggedIn()
+
     private fun checkSession() {
         viewModelScope.launch {
             // Splash ekranı altın logosunu ve degrade zeminini zarif bir süre sunar
-            delay(1500)
+            delay(1200)
             if (repository.isLoggedIn()) {
+                _navigationState.value = SplashNavigationState.NavigateToDashboard
                 _navigationEvent.emit(SplashNavigationEvent.NavigateToDashboard)
             } else {
+                _navigationState.value = SplashNavigationState.NavigateToAuth
                 _navigationEvent.emit(SplashNavigationEvent.NavigateToAuth)
             }
         }

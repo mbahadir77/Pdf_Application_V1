@@ -77,22 +77,28 @@ class StreakManager(context: Context) {
      * Durum Makinesi (State Machine):
      * - ACTIVE: Son giriş bugün veya dün (0-1 gün)
      * - WARNING: 2-3 gün girilmemiş (Rölanti)
-     * - ABANDONED: 4+ veya 7+ gün girilmemiş (Terk Edilmiş)
+     * - DANGER: 4-6 gün girilmemiş (Tehlike)
+     * - ABANDONED: 7+ gün girilmemiş (Terk Edilmiş)
      */
-    fun getWidgetState(): MotivationRepository.WidgetState {
+    fun getWidgetState(): MotivationRepository.StreakState {
         val lastTimestamp = prefs.getLong(KEY_LAST_LOGIN_TIMESTAMP, 0L)
         if (lastTimestamp == 0L) {
-            return MotivationRepository.WidgetState.ACTIVE
+            return MotivationRepository.StreakState.ACTIVE
         }
 
         val diffMillis = System.currentTimeMillis() - lastTimestamp
         val daysDiff = (diffMillis / (1000L * 60 * 60 * 24)).toInt()
 
         return when {
-            daysDiff <= 1 -> MotivationRepository.WidgetState.ACTIVE
-            daysDiff in 2..3 -> MotivationRepository.WidgetState.WARNING
-            else -> MotivationRepository.WidgetState.ABANDONED
+            daysDiff <= 1 -> MotivationRepository.StreakState.ACTIVE
+            daysDiff in 2..3 -> MotivationRepository.StreakState.WARNING
+            daysDiff in 4..6 -> MotivationRepository.StreakState.DANGER
+            else -> MotivationRepository.StreakState.ABANDONED
         }
+    }
+
+    fun getLastLoginTimestamp(): Long {
+        return prefs.getLong(KEY_LAST_LOGIN_TIMESTAMP, 0L)
     }
 
     private fun getDayOfYear(millis: Long): Int {

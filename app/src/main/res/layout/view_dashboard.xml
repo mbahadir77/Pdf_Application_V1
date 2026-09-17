@@ -49,7 +49,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="İlmNet Araştırmacı Portali"
+                    android:text="İlim Diyârı Araştırmacı Portali"
                     android:textColor="@color/text_tertiary"
                     android:textSize="11sp" />
             </LinearLayout>
