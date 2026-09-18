@@ -75,11 +75,45 @@ class FeedViewModel(
         _followedAuthors
     ) { allPosts, category, query, followed ->
         val categoryFiltered = when {
-            category.equals("Tümü", ignoreCase = true) -> allPosts
+            category.equals("Tümü", ignoreCase = true) || category.equals("Tüm Eserler", ignoreCase = true) -> allPosts
             category.equals("Takip Edilenler", ignoreCase = true) -> {
                 allPosts.filter { post -> followed.any { it.equals(post.authorName, ignoreCase = true) } }
             }
-            else -> allPosts.filter { it.category.equals(category, ignoreCase = true) }
+            category.equals("Akaid & Kelam", ignoreCase = true) -> {
+                allPosts.filter {
+                    it.category.contains("Akaid", ignoreCase = true) ||
+                    it.category.contains("Kelam", ignoreCase = true) ||
+                    it.category.contains("Kelâm", ignoreCase = true)
+                }
+            }
+            category.equals("Siyer & Tarih", ignoreCase = true) -> {
+                allPosts.filter {
+                    it.category.contains("Siyer", ignoreCase = true) ||
+                    it.category.contains("Tarih", ignoreCase = true)
+                }
+            }
+            category.equals("Sarf & Nahiv", ignoreCase = true) -> {
+                allPosts.filter {
+                    it.category.contains("Sarf", ignoreCase = true) ||
+                    it.category.contains("Nahiv", ignoreCase = true) ||
+                    it.category.contains("Nahv", ignoreCase = true) ||
+                    it.category.contains("Arapça", ignoreCase = true)
+                }
+            }
+            category.equals("Mantık & Felsefe", ignoreCase = true) -> {
+                allPosts.filter {
+                    it.category.contains("Mantık", ignoreCase = true) ||
+                    it.category.contains("Mantik", ignoreCase = true) ||
+                    it.category.contains("Felsefe", ignoreCase = true)
+                }
+            }
+            category.equals("Fıkıh", ignoreCase = true) -> {
+                allPosts.filter {
+                    it.category.contains("Fıkıh", ignoreCase = true) ||
+                    it.category.contains("Fikih", ignoreCase = true)
+                }
+            }
+            else -> allPosts.filter { it.category.contains(category, ignoreCase = true) }
         }
 
         if (query.isBlank()) {

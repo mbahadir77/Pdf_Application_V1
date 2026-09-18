@@ -24,23 +24,33 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import android.media.AudioManager
+import android.view.WindowManager
 import com.example.data.category.CategoryManager
 import com.example.data.local.AppDatabase
+import com.example.data.local.entity.BadgeEntity
 import com.example.data.local.entity.PostEntity
 import com.example.data.pref.SessionManager
 import com.example.data.remote.RetrofitClient
 import com.example.data.repository.AuthRepository
 import com.example.data.repository.FeedRepository
 import com.example.databinding.ActivityMainBinding
+import com.example.util.performTokHaptic
+import kotlinx.coroutines.delay
 import com.example.ui.about.AboutFragment
 import com.example.ui.auth.AuthMode
 import com.example.ui.auth.AuthUiState
@@ -150,6 +160,12 @@ class MainActivity : AppCompatActivity() {
     private var selectedAvatarPath: String? = null
     private var selectedPdfCoverPath: String? = null
     private var isSplashHandled: Boolean = false
+
+    // FAZ 11: İtikâf Modu (Hardcore Focus Mode) Değişkenleri
+    private var isItikafModeActive: Boolean = false
+    private var itikafStartPage: Int = 0
+    private var itikafMaxPageReached: Int = 0
+    private var itikafFailed: Boolean = false
 
     // FAZ 5 REVİZYONU: WhatsApp Tarzı 1:1 Yuvarlak/Kare Görsel Kırpıcı (CanHub Cropper)
     private val cropImageLauncher = registerForActivityResult(CropImageContract()) { result ->
@@ -269,11 +285,61 @@ class MainActivity : AppCompatActivity() {
 
         // Bildirim Deep Link Yönlendirmesini Gerçekleştir
         handleNotificationDeepLink(intent)
+
+        // FAZ 12: Seher Modu (Teheccüd İradesi) - Gece 03:00 - 05:00 Selamı & Rozeti
+        checkSeherModeOnLaunch()
+    }
+
+    /**
+     * BÖLÜM 3.3: Seher Modu (Teheccüd İradesi).
+     * Gece 03:00 ile 05:00 arasında uygulama açılırsa:
+     * "Gecenin karanlığını ilimle aydınlatanlara selam olsun." mesajı çıkar
+     * ve Room DB üzerinden kullanıcıya gizli 'Seher Vakti' rozeti takdim edilir.
+     */
+    private fun checkSeherModeOnLaunch() {
+        val calendar = java.util.Calendar.getInstance()
+        val hour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+        if (hour in 3..4) { // 03:00:00 - 04:59:59
+            val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            val seherPrefs = getSharedPreferences("ilm_seher_prefs", Context.MODE_PRIVATE)
+            val lastDate = seherPrefs.getString("key_last_seher_date", null)
+            if (lastDate != todayStr) {
+                seherPrefs.edit().putString("key_last_seher_date", todayStr).apply()
+                lifecycleScope.launch {
+                    delay(1200)
+                    if (isFinishing || isDestroyed) return@launch
+                    IlmToast.success(
+                        this@MainActivity,
+                        "Gecenin karanlığını ilimle aydınlatanlara selam olsun.",
+                        title = "Seher Vakti Mütalaası 🌙"
+                    )
+                    try {
+                        val currentUserId = authViewModel.currentUser.value?.id ?: "local_user"
+                        val db = AppDatabase.getInstance(applicationContext)
+                        val seherBadge = BadgeEntity(
+                            id = "${currentUserId}_seher_vakti",
+                            userId = currentUserId,
+                            category = "Teheccüd",
+                            level = 1,
+                            rankTitle = "Seher Vakti İradesi",
+                            isUnlocked = true,
+                            isNotified = true,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        db.badgeDao().insertOrUpdateBadge(seherBadge)
+                    } catch (_: Exception) {}
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         com.example.data.pref.SessionManager(this).updateLastActiveTime()
+        if (itikafFailed) {
+            itikafFailed = false
+            IlmToast.error(this, "İtikâf Modu bozuldu! Uygulamadan ayrıldığınız için odaklanma zinciri kırıldı.", title = "İtikâf İhlali ⚠️")
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -591,13 +657,51 @@ class MainActivity : AppCompatActivity() {
             currentUserId = authViewModel.currentUser.value?.id,
             currentUserName = authViewModel.currentUser.value?.fullName
         )
+
+        // FAZ 12: Ciltli Kitaplık (Book Spine) ve Ahşap Kütüphane Rafı
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val tabletCols = if (resources.configuration.screenWidthDp >= 900) 4 else 3
+
+        var isBookSpineMode = true
+        profileSharedWorksAdapter.isBookSpineMode = true
+
+        fun applyProfileLibraryLayout(isSpine: Boolean) {
+            isBookSpineMode = isSpine
+            profileSharedWorksAdapter.isBookSpineMode = isSpine
+            if (isSpine) {
+                dashBinding.tvShelfHeaderTitle.text = "📖 Kütüphane Rafı (Ciltli Eserler)"
+                dashBinding.rvProfileSharedWorks.setBackgroundResource(R.drawable.bg_wooden_library_shelf)
+                dashBinding.btnProfileLayoutToggle.setImageResource(R.drawable.ic_view_list)
+                dashBinding.rvProfileSharedWorks.layoutManager = if (isTablet) {
+                    GridLayoutManager(this@MainActivity, if (resources.configuration.screenWidthDp >= 900) 8 else 6)
+                } else {
+                    LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+                }
+            } else {
+                dashBinding.tvShelfHeaderTitle.text = "📄 Liste Görünümü (Tüm Risaleler)"
+                dashBinding.rvProfileSharedWorks.background = null
+                dashBinding.btnProfileLayoutToggle.setImageResource(R.drawable.ic_badge_book)
+                dashBinding.rvProfileSharedWorks.layoutManager = if (isTablet) {
+                    StaggeredGridLayoutManager(tabletCols, StaggeredGridLayoutManager.VERTICAL)
+                } else {
+                    LinearLayoutManager(this@MainActivity)
+                }
+            }
+        }
+
+        applyProfileLibraryLayout(true)
+
+        dashBinding.btnProfileLayoutToggle.setOnClickListener {
+            performTokHaptic()
+            applyProfileLibraryLayout(!isBookSpineMode)
+        }
+
         dashBinding.rvProfileSharedWorks.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = profileSharedWorksAdapter
             itemAnimator = null
         }
 
-        // 20 Akademik Kategori Rozet Matrisi (2 Sütunlu Grid - 4 Kademeli Elmas Rozetler)
+        // 20 Akademik Kategori Rozet Matrisi (Tablet: 3-4 Sütun, Telefon: 2 Sütun + ShelfItemDecoration)
         academicBadgeAdapter = AcademicBadgeAdapter { badge ->
             if (badge.isUnlocked) {
                 binding.viewConfetti.startCelebration()
@@ -615,9 +719,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         dashBinding.rvAcademicBadges.apply {
-            layoutManager = GridLayoutManager(this@MainActivity, 2)
+            val badgeCols = if (isTablet) tabletCols else 2
+            layoutManager = GridLayoutManager(this@MainActivity, badgeCols)
             adapter = academicBadgeAdapter
             itemAnimator = null
+            // Rozetlerin havada uçuşmasını engelleyen, 3D ahşap ve altın yaldızlı sergi rafı
+            addItemDecoration(com.example.ui.profile.ShelfItemDecoration(this@MainActivity))
         }
     }
 
@@ -1025,9 +1132,43 @@ class MainActivity : AppCompatActivity() {
         )
 
         feedBinding.rvFeedPosts.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = feedAdapter
             itemAnimator = null
+        }
+
+        // FAZ 11 & 12: Pinterest Tarzı Keşfet & Tablet Dinamik Izgara Yönetimi (sw600dp)
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val tabletFeedCols = if (resources.configuration.screenWidthDp >= 900) 4 else 3
+
+        val feedPrefs = getSharedPreferences("ilm_feed_prefs", Context.MODE_PRIVATE)
+        // Tablet ekranlarda kenarlarda boşluk kalmaması için varsayılan olarak 3'lü/4'lü ızgara açılır
+        var isGridMode = if (isTablet) true else feedPrefs.getBoolean("key_feed_grid_mode", false)
+
+        fun applyFeedLayout(isGrid: Boolean) {
+            isGridMode = isGrid
+            feedAdapter.isGridMode = isGrid
+            if (isGrid) {
+                val spanCount = if (isTablet) tabletFeedCols else 2
+                feedBinding.rvFeedPosts.layoutManager = StaggeredGridLayoutManager(spanCount, StaggeredGridLayoutManager.VERTICAL)
+                feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_list)
+            } else {
+                if (isTablet) {
+                    // Geniş ekranda tek dikey sütun yerine ferah 2 veya 3 sütunlu yapı
+                    feedBinding.rvFeedPosts.layoutManager = StaggeredGridLayoutManager(tabletFeedCols, StaggeredGridLayoutManager.VERTICAL)
+                    feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_list)
+                } else {
+                    feedBinding.rvFeedPosts.layoutManager = LinearLayoutManager(this@MainActivity)
+                    feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_grid)
+                }
+            }
+            feedPrefs.edit().putBoolean("key_feed_grid_mode", isGrid).apply()
+        }
+
+        applyFeedLayout(isGridMode)
+
+        feedBinding.btnFeedLayoutToggle.setOnClickListener {
+            performTokHaptic()
+            applyFeedLayout(!isGridMode)
         }
 
         feedBinding.btnEmptyAddFirstPaper.setOnClickListener {
@@ -1090,11 +1231,15 @@ class MainActivity : AppCompatActivity() {
     private fun setupCategoryChips() {
         val feedBinding = binding.viewFeed
         val chips = listOf(
-            feedBinding.chipCatAll to "Tümü",
+            feedBinding.chipCatAll to "Tüm Eserler",
             feedBinding.chipCatTefsir to "Tefsir",
             feedBinding.chipCatHadis to "Hadis",
-            feedBinding.chipCatKelam to "Kelam & Felsefe",
-            feedBinding.chipCatTarih to "İslam Tarihi"
+            feedBinding.chipCatAkaidKelam to "Akaid & Kelam",
+            feedBinding.chipCatFikih to "Fıkıh",
+            feedBinding.chipCatSiyerTarih to "Siyer & Tarih",
+            feedBinding.chipCatTasavvuf to "Tasavvuf",
+            feedBinding.chipCatSarfNahiv to "Sarf & Nahiv",
+            feedBinding.chipCatMantikFelsefe to "Mantık & Felsefe"
         )
 
         chips.forEach { (chipView, categoryName) ->
@@ -1373,6 +1518,15 @@ class MainActivity : AppCompatActivity() {
             IlmToast.info(this, "Fosforlu vurgular temizlendi.")
         }
 
+        // FAZ 11: İtikâf Modu (Hardcore Focus Mode) Butonları
+        readerBinding.btnReaderModeItikaf.setOnClickListener {
+            toggleItikafMode()
+        }
+
+        readerBinding.btnItikafExit.setOnClickListener {
+            exitItikafMode(userExitedManually = true)
+        }
+
         // Çok Renkli Kalem Seçimi (Sarı, Mavi, Yeşil, Kırmızı)
         readerBinding.btnColorYellow.setOnClickListener {
             selectHighlighterColor(HighlighterDrawingView.COLOR_YELLOW, "Sarı")
@@ -1514,13 +1668,62 @@ class MainActivity : AppCompatActivity() {
                 val pdfFile = PdfDocumentHelper.preparePdfFile(this@MainActivity, post)
                 currentActivePdfFile = pdfFile
                 currentPdfAdapter?.close()
-                val adapter = PdfPageAdapter(pdfFile)
+                val adapter = PdfPageAdapter(
+                    pdfFile = pdfFile,
+                    postId = post.id,
+                    onAnnotationSaved = { pageIndex, filePath ->
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            val db = AppDatabase.getInstance(this@MainActivity)
+                            db.postDao().updateAnnotationImagePath(post.id, filePath)
+                            db.annotationDao().insertAnnotation(
+                                com.example.data.local.entity.AnnotationEntity(
+                                    postId = post.id,
+                                    pageIndex = pageIndex,
+                                    imagePath = filePath
+                                )
+                            )
+                        }
+                    }
+                )
                 currentPdfAdapter = adapter
 
                 readerBinding.rvPdfPages.apply {
                     layoutManager = LinearLayoutManager(this@MainActivity)
                     this.adapter = adapter
                 }
+
+                // FAZ 11: Smart Resume (Kaldığın Yerden Devam Et)
+                if (post.lastReadPage > 0) {
+                    readerBinding.rvPdfPages.scrollToPosition(post.lastReadPage)
+                    IlmToast.info(
+                        this@MainActivity,
+                        "Kaldığınız yerden devam ediliyor: Sayfa ${post.lastReadPage + 1}",
+                        title = "Smart Resume 📖"
+                    )
+                }
+
+                readerBinding.rvPdfPages.clearOnScrollListeners()
+                readerBinding.rvPdfPages.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                        super.onScrollStateChanged(recyclerView, newState)
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            val lm = recyclerView.layoutManager as? LinearLayoutManager
+                            val firstVisible = lm?.findFirstVisibleItemPosition() ?: 0
+                            if (firstVisible >= 0) {
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    AppDatabase.getInstance(this@MainActivity).postDao().updateLastReadPage(post.id, firstVisible)
+                                }
+                                if (isItikafModeActive) {
+                                    if (firstVisible > itikafMaxPageReached) {
+                                        itikafMaxPageReached = firstVisible
+                                        val readSoFar = (itikafMaxPageReached - itikafStartPage).coerceAtLeast(0)
+                                        readerBinding.tvItikafStatus.text = "İtikâf Modu Devrede • Okunan: $readSoFar sayfa (Hedef: 10)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
 
                 // Varsayılan fosforlu renk: Sarı (#FFD700)
                 selectHighlighterColor(HighlighterDrawingView.COLOR_YELLOW, "Sarı")
@@ -1553,6 +1756,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun closeInternalPdfReader() {
+        if (isItikafModeActive) {
+            exitItikafMode(userExitedManually = true)
+        }
         val readerBinding = binding.viewPdfReader
         val exitAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_exit)
         exitAnim.setAnimationListener(object : Animation.AnimationListener {
@@ -1779,8 +1985,8 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     feedViewModel.posts.collect { postList ->
-                        binding.viewFeed.shimmerFeed.stopShimmer()
-                        binding.viewFeed.shimmerFeed.visibility = View.GONE
+                        binding.viewFeed.shimmerFeed.root.stopShimmer()
+                        binding.viewFeed.shimmerFeed.root.visibility = View.GONE
                         feedAdapter.submitList(postList)
                         binding.viewFeed.rvFeedPosts.visibility = if (postList.isEmpty()) View.GONE else View.VISIBLE
                         binding.viewFeed.layoutEmptyFeed.visibility = if (postList.isEmpty()) View.VISIBLE else View.GONE
@@ -1791,8 +1997,8 @@ class MainActivity : AppCompatActivity() {
                     feedViewModel.isRefreshing.collect { isRefreshing ->
                         binding.viewFeed.swipeRefreshFeed.isRefreshing = isRefreshing
                         if (isRefreshing && feedAdapter.itemCount == 0) {
-                            binding.viewFeed.shimmerFeed.visibility = View.VISIBLE
-                            binding.viewFeed.shimmerFeed.startShimmer()
+                            binding.viewFeed.shimmerFeed.root.visibility = View.VISIBLE
+                            binding.viewFeed.shimmerFeed.root.startShimmer()
                             binding.viewFeed.rvFeedPosts.visibility = View.GONE
                             binding.viewFeed.layoutEmptyFeed.visibility = View.GONE
                         }
@@ -1952,6 +2158,87 @@ class MainActivity : AppCompatActivity() {
         binding.layoutBottomNav.root.visibility = View.GONE
         binding.viewAuth.root.visibility = View.VISIBLE
         updateTabUi(authViewModel.authMode.value)
+    }
+
+    // ==========================================
+    // FAZ 11: İtikâf Modu (Hardcore Focus Mode) Yönetimi
+    // ==========================================
+    private fun toggleItikafMode() {
+        if (!isItikafModeActive) {
+            startItikafMode()
+        } else {
+            exitItikafMode(userExitedManually = true)
+        }
+    }
+
+    private fun startItikafMode() {
+        isItikafModeActive = true
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+        val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val currentVol = audio.getStreamVolume(AudioManager.STREAM_MUSIC)
+        if (currentVol > 0) {
+            IlmToast.info(this, "Odaklanma devrede: Ortamı sessize almanız tavsiye edilir 🎧", title = "İtikâf Uyarısı")
+        }
+
+        val readerBinding = binding.viewPdfReader
+        readerBinding.layoutItikafBanner.visibility = View.VISIBLE
+        readerBinding.btnReaderModeItikaf.setBackgroundResource(R.drawable.bg_tab_active)
+        val lm = readerBinding.rvPdfPages.layoutManager as? LinearLayoutManager
+        itikafStartPage = lm?.findFirstVisibleItemPosition() ?: 0
+        itikafMaxPageReached = itikafStartPage
+        itikafFailed = false
+        readerBinding.tvItikafStatus.text = "İtikâf Modu Devrede • Derin Mütalaa (Ayrılmayın!)"
+        IlmToast.info(this, "İtikâf Modu Aktif! Ekran açık tutuluyor, ayrılmadan mütalaa ediniz.", title = "İtikâf Modu 🕊️")
+    }
+
+    private fun exitItikafMode(userExitedManually: Boolean) {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        WindowCompat.getInsetsController(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
+
+        val readerBinding = binding.viewPdfReader
+        readerBinding.layoutItikafBanner.visibility = View.GONE
+        readerBinding.btnReaderModeItikaf.setBackgroundResource(R.drawable.bg_tab_inactive)
+
+        if (userExitedManually && !itikafFailed) {
+            val pagesRead = (itikafMaxPageReached - itikafStartPage).coerceAtLeast(0)
+            if (pagesRead >= 10) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val user = authRepository.getCurrentUserFlow().firstOrNull()
+                    if (user != null) {
+                        val db = AppDatabase.getInstance(this@MainActivity)
+                        val itikafBadge = com.example.data.local.entity.BadgeEntity(
+                            id = "${user.id}_itikaf",
+                            userId = user.id,
+                            category = "İtikâf",
+                            level = 1,
+                            rankTitle = "İtikâf İradesi",
+                            isUnlocked = true,
+                            isNotified = true,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        db.badgeDao().insertOrUpdateBadge(itikafBadge)
+                        withContext(Dispatchers.Main) {
+                            IlmToast.success(this@MainActivity, "✨ Tebrikler! 10+ sayfa kesintisiz mütalaa ile 'İtikâf İradesi' rozetini kazandınız!", title = "Özel Rozet 🎖️")
+                        }
+                    }
+                }
+            } else {
+                IlmToast.info(this, "İtikâf mütalaası tamamlandı. Okunan sayfa: $pagesRead", title = "Mütalaa Notu")
+            }
+        }
+        isItikafModeActive = false
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (isItikafModeActive) {
+            itikafFailed = true
+            exitItikafMode(userExitedManually = false)
+        }
     }
 }
 

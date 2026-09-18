@@ -170,9 +170,14 @@ object NotificationHelper {
         readerName: String = "Bir araştırmacı",
         readerId: String? = null,
         authorId: String? = null,
+        authorName: String? = null,
         targetPostId: String? = null
     ) {
+        // Kendi kendine bildirim gitmesini engelle (Self-Interaction Prevention)
         if (readerId != null && authorId != null && readerId == authorId) {
+            return
+        }
+        if (authorName != null && readerName.isNotBlank() && authorName.equals(readerName, ignoreCase = true)) {
             return
         }
         val wittyMessages = listOf(

@@ -37,6 +37,7 @@
     <color name="text_gold">#E5C158</color>
     <color name="btn_text_dark">#0A140E</color>
     <color name="error_red">#FF6B6B</color>
+    <color name="heart_red">#E53935</color>
     <color name="success_green">#4EBA7B</color>
 
     <!-- Standard Colors -->

@@ -5,7 +5,7 @@
     android:id="@+id/dashboard_scroll_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_auth_gradient"
+    android:background="@drawable/bg_mesh_gradient"
     android:fillViewport="true">
 
     <LinearLayout
@@ -326,7 +326,7 @@
             </FrameLayout>
         </LinearLayout>
 
-        <!-- Sekme İçeriği 1: Paylaşılan Eserler Listesi -->
+        <!-- Sekme İçeriği 1: Paylaşılan Eserler Listesi (Ciltli Kitaplık) -->
         <LinearLayout
             android:id="@+id/layout_tab_shared_works"
             android:layout_width="match_parent"
@@ -335,13 +335,45 @@
             android:orientation="vertical"
             android:visibility="visible">
 
+            <!-- Kütüphane Rafı Başlığı ve Görünüm Seçeneği -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_shelf_header_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:letterSpacing="0.04"
+                    android:text="📖 Kütüphane Rafı (Ciltli Eserler)"
+                    android:textColor="@color/gold_vibrant"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btn_profile_layout_toggle"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Görünüm Değiştir"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_view_list"
+                    app:tint="@color/gold_vibrant" />
+            </LinearLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_profile_shared_works"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_wooden_library_shelf"
                 android:nestedScrollingEnabled="false"
-                tools:itemCount="2"
-                tools:listitem="@layout/item_post" />
+                android:padding="8dp"
+                tools:itemCount="4"
+                tools:listitem="@layout/item_book_spine" />
 
             <TextView
                 android:id="@+id/tv_profile_no_works"

@@ -4,29 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 1. Tam Boyutlu Arka Plan Görseli (centerCrop) -->
+    <!-- 1. Kod Tarafında %60 Siyah Karartılmış Tam Boyutlu Arka Plan Görseli (centerCrop) -->
     <ImageView
         android:id="@+id/iv_widget_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="İlim Aynası Arka Planı"
-        android:scaleType="centerCrop"
-        android:src="@drawable/widget_ilm_bg" />
+        android:scaleType="centerCrop" />
 
-    <!-- 2. %60 Siyah Karartma Katmanı (#99000000) -->
-    <View
-        android:id="@+id/view_widget_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#99000000" />
-
-    <!-- İnce Altın Kenarlık Çerçevesi -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/bg_widget_glass" />
-
-    <!-- 3. Beyaz ve Altın Tipografi ile İçerik Katmanı -->
+    <!-- 2. Beyaz ve Altın Tipografi ile İçerik Katmanı -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

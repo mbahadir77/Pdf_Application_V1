@@ -6,6 +6,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
 import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
@@ -13,8 +19,9 @@ import com.example.data.pref.StreakManager
 import com.example.data.repository.MotivationRepository
 
 /**
- * İlmNet - İlim Aynası (Durum Bazlı App Widget - FAZ 8).
- * Kullanıcının giriş serisini (streak) ve aktiflik durumunu dinamik olarak masaüstüne yansıtır.
+ * İlmNet - İlim Aynası (Durum Bazlı App Widget - FAZ 11).
+ * RemoteViews arka plan filtre kısıtlamalarını aşmak için Canvas & Paint ile
+ * %60 karartılmış Bitmap üretip doğrudan ImageView'a aktarır.
  */
 class IlmMirrorWidgetProvider : AppWidgetProvider() {
 
@@ -40,6 +47,44 @@ class IlmMirrorWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH_WIDGET = "com.example.ilmnet.ACTION_REFRESH_WIDGET"
+
+        /**
+         * %60 siyah filtreli (#99000000) ve altın kenarlıklı güvenli Bitmap üretir.
+         */
+        private fun createDimmedBackgroundBitmap(context: Context, width: Int = 800, height: Int = 450): Bitmap {
+            return try {
+                val srcBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.widget_ilm_bg)
+                val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(output)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+
+                if (srcBitmap != null) {
+                    val srcRect = Rect(0, 0, srcBitmap.width, srcBitmap.height)
+                    val destRect = Rect(0, 0, width, height)
+                    canvas.drawBitmap(srcBitmap, srcRect, destRect, paint)
+                } else {
+                    canvas.drawColor(Color.parseColor("#120B04"))
+                }
+
+                // %60 Siyah Filtre Katmanı (#99000000)
+                paint.color = Color.parseColor("#99000000")
+                paint.style = Paint.Style.FILL
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+
+                // İnce Altın Kenarlık
+                paint.color = Color.parseColor("#44D4AF37")
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 4f
+                canvas.drawRect(2f, 2f, (width - 2).toFloat(), (height - 2).toFloat(), paint)
+
+                output
+            } catch (e: Exception) {
+                val fallback = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(fallback)
+                canvas.drawColor(Color.parseColor("#99120B04"))
+                fallback
+            }
+        }
 
         fun updateAppWidget(
             context: Context,
@@ -69,7 +114,10 @@ class IlmMirrorWidgetProvider : AppWidgetProvider() {
                 }
             }
 
-            views.setImageViewResource(R.id.iv_widget_background, R.drawable.widget_ilm_bg)
+            // RemoteViews arka plan filtresi kısıtını çözen karartılmış Bitmap aktarımı
+            val dimmedBg = createDimmedBackgroundBitmap(context)
+            views.setImageViewBitmap(R.id.iv_widget_background, dimmedBg)
+
             views.setImageViewResource(R.id.iv_widget_status_icon, iconRes)
             views.setTextViewText(R.id.tv_widget_streak_badge, stateBadge)
             views.setTextViewText(R.id.tv_widget_quote, quote)

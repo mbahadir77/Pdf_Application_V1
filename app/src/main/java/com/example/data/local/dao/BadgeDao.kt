@@ -30,4 +30,10 @@ interface BadgeDao {
 
     @Query("UPDATE badges SET is_notified = 1 WHERE id = :badgeId")
     suspend fun markBadgeAsNotified(badgeId: String)
+
+    @Query("SELECT is_notified FROM badges WHERE user_id = :userId AND category = :category AND level >= :level LIMIT 1")
+    suspend fun isBadgeLevelNotified(userId: String, category: String, level: Int): Boolean?
+
+    @Query("UPDATE badges SET is_notified = 1, level = :level, rank_title = :rankTitle WHERE user_id = :userId AND category = :category")
+    suspend fun markCategoryNotified(userId: String, category: String, level: Int, rankTitle: String)
 }

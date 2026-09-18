@@ -29,7 +29,8 @@ data class AcademicBadge(
         in 1..5 -> 1
         else -> 0
     },
-    val tierTitle: String = rankTitle
+    val tierTitle: String = rankTitle,
+    val vectorIconRes: Int = AcademicBadgeEngine.getBadgeVectorRes(category, rankTitle)
 )
 
 object AcademicBadgeEngine {
@@ -301,5 +302,28 @@ object AcademicBadgeEngine {
      */
     fun getRankTreeForCategory(categoryName: String): List<String> {
         return RANK_TREES[categoryName] ?: RANK_TREES["Diğer"]!!
+    }
+
+    /**
+     * Rozet ve rütbe unvanına göre vektör ikon kaynağını belirler (Faz 11).
+     */
+    fun getBadgeVectorRes(category: String, rankTitle: String): Int {
+        val lower = rankTitle.lowercase()
+        val catLower = category.lowercase()
+        return when {
+            lower.contains("itikaf") || lower.contains("irade") -> com.example.R.drawable.ic_badge_itikaf
+            lower.contains("hâfız") || lower.contains("hafız") || lower.contains("allâme") ||
+                lower.contains("sultan") || lower.contains("zirve") || lower.contains("kupa") ||
+                lower.contains("üstad") || lower.contains("allame") -> com.example.R.drawable.ic_badge_trophy
+            lower.contains("kurt") || lower.contains("okur") || lower.contains("fatih") ||
+                catLower.contains("roman") || catLower.contains("dergi") || lower.contains("araştırmacı") -> com.example.R.drawable.ic_badge_glasses
+            catLower.contains("fıkıh") || catLower.contains("usul") || lower.contains("ahkâm") ||
+                lower.contains("kıyâs") || lower.contains("fetvâ") -> com.example.R.drawable.ic_badge_scroll
+            catLower.contains("arapça") || catLower.contains("nahv") || lower.contains("kalem") ||
+                lower.contains("muharrir") || lower.contains("kâtib") -> com.example.R.drawable.ic_badge_pen
+            catLower.contains("akaid") || catLower.contains("kelâm") || lower.contains("tevhid") ||
+                lower.contains("burhân") -> com.example.R.drawable.ic_badge_star
+            else -> com.example.R.drawable.ic_badge_book
+        }
     }
 }

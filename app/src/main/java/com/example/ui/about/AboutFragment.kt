@@ -2,6 +2,7 @@ package com.example.ui.about
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -11,19 +12,23 @@ import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.example.R
 import com.example.databinding.FragmentAboutBinding
 import com.example.ui.common.IlmToast
+import com.example.util.performTokHaptic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * İlmNet - Oyun Jeneriği (Credits) Tarzı Hakkında & IMF Easter Egg Sayfası (Faz 7).
- * Siyah zemin üzerinde altın sarısı tipografiyle Muhammed Bahadır Yıldırım ve
- * Yıldırım Technologies kadrosunu listeler.
- * Logoya 10 kez tıklanması durumunda gizli terminal protokolü devreye girer.
+ * İlmNet - Oyun Jeneriği (Credits) & Sinematik Gizemler (FAZ 12).
+ * - Siyah zemin üzerinde altın sarısı tipografiyle Muhammed Bahadır Yıldırım ve
+ *   Yıldırım Technologies kadrosunu listeler.
+ * - Logoya 10 kez tıklandığında ekran kararır, epik R.raw.epic_mystery_voice sesi yankılanır
+ *   ve 'Gerçeği arayan yolcu... İlim Diyârı'nın kalbine ulaştın.' altın yazısı belirir.
+ * - 'Sürüm Günlükleri' butonu ile destansı tarihçe (Faz 1-12) açılır.
  */
 class AboutFragment : DialogFragment() {
 
@@ -32,6 +37,7 @@ class AboutFragment : DialogFragment() {
 
     private var logoClickCount = 0
     private var lastLogoClickTime = 0L
+    private var mysteryMediaPlayer: MediaPlayer? = null
 
     override fun getTheme(): Int = R.style.Theme_IlmNet_FullScreenCredits
 
@@ -63,10 +69,30 @@ class AboutFragment : DialogFragment() {
             }
         }
 
-        // FAZ 7: IMF Tarzı 'Easter Egg' (10 Tık Dinleyicisi)
+        // FAZ 12: Hikayeleştirilmiş Sürüm Notları (Heist-Style Release Notes)
+        binding.btnReleaseNotes.setOnClickListener {
+            requireContext().performTokHaptic()
+            ReleaseNotesBottomSheetDialogFragment.newInstance()
+                .show(parentFragmentManager, ReleaseNotesBottomSheetDialogFragment.TAG)
+        }
+
+        // FAZ 12: Sinematik Gizem (10 Tıklama Easter Egg)
         setupEasterEggListener()
 
-        // Ekrana tek dokunuşla kapatma (Kapatmak için ekrana bir kez dokunmak yetsin)
+        // Sinematik gizem overlay dokunma dinleyicisi (Kapatma)
+        binding.layoutMysteryCinematic.setOnClickListener {
+            stopMysteryAudio()
+            binding.layoutMysteryCinematic.animate()
+                .alpha(0f)
+                .setDuration(500)
+                .withEndAction {
+                    binding.layoutMysteryCinematic.visibility = View.GONE
+                }
+                .start()
+            logoClickCount = 0
+        }
+
+        // IMF Terminal ekranını kapatma
         binding.layoutEasterEggTerminal.setOnClickListener {
             binding.layoutEasterEggTerminal.visibility = View.GONE
             logoClickCount = 0
@@ -87,7 +113,7 @@ class AboutFragment : DialogFragment() {
     private fun setupEasterEggListener() {
         binding.ivCreditsLogo.setOnClickListener {
             val currentTime = System.currentTimeMillis()
-            if (currentTime - lastLogoClickTime > 2000) {
+            if (currentTime - lastLogoClickTime > 2500) {
                 logoClickCount = 0
             }
             lastLogoClickTime = currentTime
@@ -96,18 +122,71 @@ class AboutFragment : DialogFragment() {
             // Haptik geri bildirim (kısa titreşim)
             triggerHapticClick()
 
-            if (logoClickCount in 7..9) {
+            if (logoClickCount in 6..9) {
                 val remaining = 10 - logoClickCount
                 IlmToast.info(
                     requireActivity(),
-                    "Güvenlik yetkilendirmesi sorgulanıyor... ($remaining)",
-                    title = "Protokol Doğrulama"
+                    "Mabedin kapısı aralanıyor... ($remaining)",
+                    title = "Kalbe Doğru 📜"
                 )
             } else if (logoClickCount >= 10) {
                 logoClickCount = 0
-                triggerSecretProtocolEasterEgg()
+                triggerCinematicMysteryEasterEgg()
             }
         }
+    }
+
+    /**
+     * BÖLÜM 3.1: Sinematik Gizem (10 Tıklama Easter Egg).
+     * Ekranda her şey kararır (fade out), arkadan epik ses (R.raw.epic_mystery_voice) çalmaya başlar,
+     * ekranda altın rengiyle yavaşça şu yazı belirir:
+     * 'Gerçeği arayan yolcu... İlim Diyârı'nın kalbine ulaştın.'
+     */
+    private fun triggerCinematicMysteryEasterEgg() {
+        triggerSuccessVibration()
+
+        // 1. Ekranı tamamen karart ve sinematik katmanı görünür yap
+        binding.layoutMysteryCinematic.alpha = 0f
+        binding.layoutMysteryCinematic.visibility = View.VISIBLE
+        binding.layoutCinematicContent.alpha = 0f
+
+        binding.layoutMysteryCinematic.animate()
+            .alpha(1f)
+            .setDuration(1200)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+
+        // 2. Altın yazıyı ve mührü yavaşça parlatarak ortaya çıkar
+        binding.layoutCinematicContent.animate()
+            .alpha(1f)
+            .setDuration(2500)
+            .setStartDelay(600)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+
+        // 3. Epik ses dosyasını (R.raw.epic_mystery_voice) oynat
+        playMysteryAudio()
+    }
+
+    private fun playMysteryAudio() {
+        try {
+            stopMysteryAudio()
+            val resId = resources.getIdentifier("epic_mystery_voice", "raw", requireContext().packageName)
+            val finalResId = if (resId != 0) resId else R.raw.epic_mystery_voice
+            mysteryMediaPlayer = MediaPlayer.create(requireContext(), finalResId)
+            mysteryMediaPlayer?.isLooping = false
+            mysteryMediaPlayer?.start()
+        } catch (_: Exception) {
+            // Ses donanımı veya dosya gecikmesi durumunda çökmeyi önle
+        }
+    }
+
+    private fun stopMysteryAudio() {
+        try {
+            mysteryMediaPlayer?.stop()
+            mysteryMediaPlayer?.release()
+            mysteryMediaPlayer = null
+        } catch (_: Exception) {}
     }
 
     private fun triggerSecretProtocolEasterEgg() {
@@ -207,6 +286,7 @@ class AboutFragment : DialogFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        stopMysteryAudio()
         _binding = null
     }
 

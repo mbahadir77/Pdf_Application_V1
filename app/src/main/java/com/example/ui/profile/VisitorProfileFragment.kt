@@ -128,11 +128,24 @@ class VisitorProfileFragment : Fragment() {
             onAuthorClicked = { _, _, _ -> /* Zaten bu profildeyiz */ }
         )
 
-        binding.rvVisitorPdfs.layoutManager = LinearLayoutManager(requireContext())
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val tabletCols = if (resources.configuration.screenWidthDp >= 900) 4 else 3
+
+        if (isTablet) {
+            feedAdapter.isGridMode = true
+            binding.rvVisitorPdfs.layoutManager = androidx.recyclerview.widget.StaggeredGridLayoutManager(
+                tabletCols,
+                androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
+            )
+        } else {
+            binding.rvVisitorPdfs.layoutManager = LinearLayoutManager(requireContext())
+        }
         binding.rvVisitorPdfs.adapter = feedAdapter
 
-        binding.rvVisitorBadges.layoutManager = GridLayoutManager(requireContext(), 2)
+        val badgeCols = if (isTablet) tabletCols else 2
+        binding.rvVisitorBadges.layoutManager = GridLayoutManager(requireContext(), badgeCols)
         binding.rvVisitorBadges.adapter = badgeAdapter
+        binding.rvVisitorBadges.addItemDecoration(ShelfItemDecoration(requireContext()))
 
         // Sekmeler
         binding.tabVisitorPdfs.setOnClickListener {

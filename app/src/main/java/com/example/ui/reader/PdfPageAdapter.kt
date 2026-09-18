@@ -11,11 +11,14 @@ import com.example.databinding.ItemPdfPageBinding
 import java.io.File
 
 /**
- * İlmNet - Yerleşik PDF Sayfa Adaptörü.
- * android.graphics.pdf.PdfRenderer ile PDF sayfalarını pürüzsüz vektörel bitmap olarak işler.
+ * İlim Diyârı - Yerleşik PDF Sayfa Adaptörü ve S-Pen Mürekkep Katmanı (FAZ 12 & 13).
+ * android.graphics.pdf.PdfRenderer ile PDF sayfalarını işler ve HighlighterDrawingView
+ * üzerinden sayfa bazlı el yazısı notları PNG overlay olarak kalıcı kılar.
  */
 class PdfPageAdapter(
-    private val pdfFile: File
+    private val pdfFile: File,
+    private val postId: String? = null,
+    private val onAnnotationSaved: ((pageIndex: Int, filePath: String) -> Unit)? = null
 ) : RecyclerView.Adapter<PdfPageAdapter.PdfPageViewHolder>() {
 
     private var fileDescriptor: ParcelFileDescriptor? = null
@@ -83,8 +86,31 @@ class PdfPageAdapter(
 
     override fun onViewDetachedFromWindow(holder: PdfPageViewHolder) {
         super.onViewDetachedFromWindow(holder)
-        activeHighlighters.remove(holder.binding.viewHighlighterOverlay)
+        val highlighter = holder.binding.viewHighlighterOverlay
+        val currentPid = postId ?: highlighter.currentPostId
+        if (!currentPid.isNullOrEmpty() && highlighter.hasDrawings()) {
+            val savedFile = highlighter.saveDrawingToDisk(currentPid, highlighter.currentPageNumber)
+            savedFile?.let { file ->
+                onAnnotationSaved?.invoke(highlighter.currentPageNumber - 1, file.absolutePath)
+            }
+        }
+        activeHighlighters.remove(highlighter)
         activeZoomContainers.remove(holder.binding.containerPageCanvas)
+    }
+
+    /**
+     * Açık olan tüm sayfalardaki bekleyen S-Pen çizimlerini diske kaydeder.
+     */
+    fun saveAllPendingDrawings() {
+        val pid = postId ?: return
+        activeHighlighters.forEach { highlighter ->
+            if (highlighter.hasDrawings()) {
+                val file = highlighter.saveDrawingToDisk(pid, highlighter.currentPageNumber)
+                file?.let {
+                    onAnnotationSaved?.invoke(highlighter.currentPageNumber - 1, it.absolutePath)
+                }
+            }
+        }
     }
 
     fun clearAllDrawings() {
@@ -93,6 +119,7 @@ class PdfPageAdapter(
 
     fun close() {
         try {
+            saveAllPendingDrawings()
             pageBitmaps.values.forEach { it.recycle() }
             pageBitmaps.clear()
             pdfRenderer?.close()
@@ -108,13 +135,13 @@ class PdfPageAdapter(
 
         fun bind(position: Int) {
             val totalPages = pdfRenderer?.pageCount ?: 1
-            binding.tvPageIndicator.text = "Sayfa ${position + 1} / $totalPages"
+            val pageNum = position + 1
+            binding.tvPageIndicator.text = "Sayfa $pageNum / $totalPages"
 
             var bitmap = pageBitmaps[position]
             if (bitmap == null && pdfRenderer != null) {
                 try {
                     val page = pdfRenderer!!.openPage(position)
-                    // 2x Ölçek ile kristal netliğinde akademik metin okuma deneyimi
                     val scale = 2
                     val width = page.width * scale
                     val height = page.height * scale
@@ -135,9 +162,33 @@ class PdfPageAdapter(
                 binding.ivPdfPage.setImageBitmap(bitmap)
             }
 
-            binding.viewHighlighterOverlay.isDrawingEnabled = isDrawingMode
-            binding.viewHighlighterOverlay.activeColor = activeColor
+            val highlighter = binding.viewHighlighterOverlay
+            val currentPid = postId ?: "default_pdf"
+            highlighter.currentPostId = currentPid
+            highlighter.currentPageNumber = pageNum
+            highlighter.isDrawingEnabled = isDrawingMode
+            highlighter.activeColor = activeColor
             binding.containerPageCanvas.isDrawingMode = isDrawingMode
+
+            // FAZ 13: S-Pen Mürekkep Katmanını Geri Yükle (Restore Overlay)
+            val context = binding.root.context
+            val annotationsDir = File(context.filesDir, "annotations")
+            val sanitizedPid = currentPid.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+            val targetFile = File(annotationsDir, "annotation_${sanitizedPid}_p${pageNum}.png")
+
+            if (targetFile.exists() && targetFile.length() > 0) {
+                highlighter.loadOverlayFromPath(targetFile.absolutePath)
+            } else {
+                highlighter.loadOverlayFromPath(null)
+            }
+
+            // Çizim değiştiğinde veya tamamlandığında otomatik diske ve DB'ye kaydet
+            highlighter.onDrawingChangedListener = {
+                val saved = highlighter.saveDrawingToDisk(currentPid, pageNum)
+                saved?.let { file ->
+                    onAnnotationSaved?.invoke(position, file.absolutePath)
+                }
+            }
         }
     }
 }

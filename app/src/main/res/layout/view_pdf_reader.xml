@@ -5,7 +5,7 @@
     android:id="@+id/pdf_reader_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_auth_gradient"
+    android:background="@drawable/bg_mesh_gradient"
     android:orientation="vertical">
 
     <!-- Yerleşik PDF Okuyucu Üst Barı -->
@@ -135,6 +135,68 @@
             android:focusable="true"
             android:padding="8dp"
             android:src="@drawable/ic_close_circle" />
+
+        <!-- İtikâf Modu (Hardcore Focus Mode) Butonu -->
+        <FrameLayout
+            android:id="@+id/btn_reader_mode_itikaf"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_tab_inactive"
+            android:clickable="true"
+            android:contentDescription="İtikâf Modu (Derin Odaklanma)"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iv_mode_itikaf_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_badge_itikaf"
+                app:tint="@color/gold_vibrant" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- İtikâf Modu Bildirim Banner'ı -->
+    <LinearLayout
+        android:id="@+id/layout_itikaf_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#DD140C04"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_badge_itikaf"
+            app:tint="@color/gold_vibrant" />
+
+        <TextView
+            android:id="@+id/tv_itikaf_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="İtikâf Modu Devrede • Derin Mütalaa (Ayrılmayın!)"
+            android:textColor="@color/gold_vibrant"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_itikaf_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="Tamamla"
+            android:textColor="@color/text_primary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Mini Çok Renkli Kalem Paleti (Kalem modu aktifken açılır) -->

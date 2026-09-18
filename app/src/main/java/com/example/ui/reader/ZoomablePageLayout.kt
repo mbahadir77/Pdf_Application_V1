@@ -68,6 +68,13 @@ class ZoomablePageLayout @JvmOverloads constructor(
     })
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        // Akıllı kalem (S-Pen / Stylus) teması varsa sayfa kaydırma / sürüklemeyi kapat, çizim katmanına devret
+        val toolType = if (ev.pointerCount > 0) ev.getToolType(0) else MotionEvent.TOOL_TYPE_UNKNOWN
+        if (toolType == MotionEvent.TOOL_TYPE_STYLUS || toolType == MotionEvent.TOOL_TYPE_ERASER) {
+            parent?.requestDisallowInterceptTouchEvent(true)
+            return false
+        }
+
         // İki veya daha fazla parmak varsa her zaman pinch-zoom yakala
         if (ev.pointerCount >= 2) {
             parent?.requestDisallowInterceptTouchEvent(true)

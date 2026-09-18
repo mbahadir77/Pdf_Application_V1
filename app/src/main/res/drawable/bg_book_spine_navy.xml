@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Deri Doku Tabanı (Lacivert) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:startColor="#091522"
+                android:centerColor="#122A42"
+                android:endColor="#07111C"
+                android:type="linear" />
+            <corners android:radius="4dp" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#D4AF37" />
+        </shape>
+    </item>
+
+    <!-- Üst Yaldızlı Şiraze / Kuşak -->
+    <item
+        android:top="16dp"
+        android:left="4dp"
+        android:right="4dp"
+        android:height="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#E6C66E" />
+            <corners android:radius="1dp" />
+        </shape>
+    </item>
+
+    <!-- Üst 2. Yaldızlı Kuşak -->
+    <item
+        android:top="22dp"
+        android:left="4dp"
+        android:right="4dp"
+        android:height="1.5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#99D4AF37" />
+        </shape>
+    </item>
+
+    <!-- Alt 2. Yaldızlı Kuşak -->
+    <item
+        android:bottom="22dp"
+        android:left="4dp"
+        android:right="4dp"
+        android:height="1.5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#99D4AF37" />
+        </shape>
+    </item>
+
+    <!-- Alt Yaldızlı Şiraze / Kuşak -->
+    <item
+        android:bottom="16dp"
+        android:left="4dp"
+        android:right="4dp"
+        android:height="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#E6C66E" />
+            <corners android:radius="1dp" />
+        </shape>
+    </item>
+</layer-list>

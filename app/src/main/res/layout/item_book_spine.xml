@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="4dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="12dp">
+
+    <!-- Ciltli Kitap Sırtı Gövdesi -->
+    <LinearLayout
+        android:id="@+id/container_book_spine"
+        android:layout_width="54dp"
+        android:layout_height="200dp"
+        android:background="@drawable/bg_book_spine_burgundy"
+        android:clickable="true"
+        android:elevation="6dp"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- Üst Altın Yaldızlı Amblem / Mühür -->
+        <ImageView
+            android:id="@+id/iv_book_spine_crest"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginTop="20dp"
+            android:contentDescription="Kitap Mührü"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_academic_logo"
+            app:tint="#FFD700" />
+
+        <!-- 90 Derece Dikey Kitap Başlığı (Yukarıdan Aşağı) -->
+        <com.example.ui.common.VerticalTextView
+            android:id="@+id/tv_book_spine_title"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:letterSpacing="0.06"
+            android:maxLines="1"
+            android:paddingHorizontal="2dp"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="Sahih-i Buhari Muhtasarı" />
+
+        <!-- Alt Kategori Kodu / Cilt İbaresi -->
+        <TextView
+            android:id="@+id/tv_book_spine_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp"
+            android:ellipsize="end"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:letterSpacing="0.04"
+            android:maxLines="1"
+            android:textColor="#C5A059"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            tools:text="HADİS" />
+    </LinearLayout>
+
+</FrameLayout>

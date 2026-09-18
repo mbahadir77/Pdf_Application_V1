@@ -17,6 +17,15 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <ImageView
+            android:id="@+id/iv_badge_vector_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="Rozet Vektör İkonu"
+            android:src="@drawable/ic_badge_book"
+            app:tint="@color/gold_vibrant" />
+
         <TextView
             android:id="@+id/tv_badge_tier_icon"
             android:layout_width="wrap_content"

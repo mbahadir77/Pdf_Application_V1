@@ -5,7 +5,7 @@
     android:id="@+id/feed_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_auth_gradient"
+    android:background="@drawable/bg_mesh_gradient"
     android:orientation="vertical">
 
     <!-- Üst Başlık ve Senkronizasyon Durumu -->
@@ -44,6 +44,19 @@
 
 
         </LinearLayout>
+
+        <!-- Görünüm Değiştir Butonu (Liste / 2'li Izgara) -->
+        <ImageView
+            android:id="@+id/btn_feed_layout_toggle"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_tab_container"
+            android:clickable="true"
+            android:contentDescription="Görünüm Değiştir"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_view_grid" />
 
         <!-- Yenile Butonu -->
         <ImageView
@@ -157,7 +170,7 @@
                 android:focusable="true"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="7dp"
-                android:text="Tümü"
+                android:text="Tüm Eserler"
                 android:textColor="@color/gold_start"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -191,7 +204,7 @@
                 android:textSize="12sp" />
 
             <TextView
-                android:id="@+id/chip_cat_kelam"
+                android:id="@+id/chip_cat_akaid_kelam"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -200,12 +213,12 @@
                 android:focusable="true"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="7dp"
-                android:text="Kelam &amp; Felsefe"
+                android:text="Akaid &amp; Kelam"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
             <TextView
-                android:id="@+id/chip_cat_tarih"
+                android:id="@+id/chip_cat_fikih"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -214,7 +227,63 @@
                 android:focusable="true"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="7dp"
-                android:text="İslam Tarihi"
+                android:text="Fıkıh"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chip_cat_siyer_tarih"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_category_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="Siyer &amp; Tarih"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chip_cat_tasavvuf"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_category_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="Tasavvuf"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chip_cat_sarf_nahiv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_category_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="Sarf &amp; Nahiv"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chip_cat_mantik_felsefe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_category_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="Mantık &amp; Felsefe"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -231,30 +300,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Shimmer Effect (İskelet Yükleme - FAZ 8) -->
-            <com.facebook.shimmer.ShimmerFrameLayout
+            <!-- Shimmer Effect (İskelet Yükleme - FAZ 13) -->
+            <include
                 android:id="@+id/shimmer_feed"
+                layout="@layout/layout_post_shimmer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone"
-                app:shimmer_auto_start="true"
-                app:shimmer_base_alpha="0.25"
-                app:shimmer_base_color="#183327"
-                app:shimmer_colored="true"
-                app:shimmer_duration="1200"
-                app:shimmer_highlight_alpha="0.75"
-                app:shimmer_highlight_color="#40D4AF37">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <include layout="@layout/item_skeleton_post" />
-                    <include layout="@layout/item_skeleton_post" />
-                    <include layout="@layout/item_skeleton_post" />
-                </LinearLayout>
-            </com.facebook.shimmer.ShimmerFrameLayout>
+                android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_feed_posts"

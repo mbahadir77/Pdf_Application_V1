@@ -51,6 +51,7 @@ class AcademicBadgeAdapter(
             binding.tvBadgeProgressCounter.text = "${badge.progressText} Eser"
             binding.pbBadgeProgress.progress = badge.progressPercent
             binding.tvBadgeTierIcon.text = badge.tierIcon
+            binding.ivBadgeVectorIcon.setImageResource(badge.vectorIconRes)
 
             binding.root.setOnClickListener {
                 onBadgeClick?.invoke(badge)

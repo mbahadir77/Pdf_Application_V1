@@ -5,7 +5,7 @@
     android:id="@+id/about_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#050505">
+    android:background="@drawable/bg_mesh_gradient">
 
     <!-- Ana Jenerik İçerik Scroll -->
     <ScrollView
@@ -263,16 +263,98 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Sürüm Günlükleri (Release Notes) Butonu -->
+            <Button
+                android:id="@+id/btn_release_notes"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="#1F1608"
+                android:drawableStart="@drawable/ic_badge_book"
+                android:drawablePadding="8dp"
+                android:drawableTint="#FFD700"
+                android:fontFamily="serif"
+                android:letterSpacing="0.05"
+                android:paddingHorizontal="20dp"
+                android:text="📜 Sürüm Günlükleri (Tarihçe)"
+                android:textColor="#FFD700"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="v1.0.0 • Master Max Pro Ultimate"
+                android:layout_marginTop="16dp"
+                android:text="v1.0.0 • Faz 12 Master Max Pro Ultimate"
                 android:textColor="#555555"
                 android:textSize="11sp" />
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- ================= SİNEMATİK GİZEM (10 TIKLAMA EASTER EGG OVERLAY) ================= -->
+    <FrameLayout
+        android:id="@+id/layout_mystery_cinematic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:clickable="true"
+        android:elevation="30dp"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/layout_cinematic_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="32dp">
+
+            <ImageView
+                android:id="@+id/iv_cinematic_glow_logo"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:contentDescription="Altın Mühür"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_academic_logo"
+                app:tint="#FFD700" />
+
+            <TextView
+                android:id="@+id/tv_cinematic_mystery_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:letterSpacing="0.08"
+                android:lineSpacingExtra="10dp"
+                android:text="Gerçeği arayan yolcu...\nİlim Diyârı'nın kalbine ulaştın."
+                android:textColor="#FFD700"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_cinematic_subtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:letterSpacing="0.15"
+                android:text="• YILDIRIM TECHNOLOGIES •"
+                android:textColor="#C5A059"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:letterSpacing="0.05"
+                android:text="[Kapatmak için ekrana dokunun]"
+                android:textColor="#666666"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- ================= IMF EASTER EGG OVERLAY ================= -->
     <FrameLayout

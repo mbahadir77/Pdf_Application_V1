@@ -38,5 +38,9 @@ data class PostEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "github_issue_id")
-    val githubIssueId: Long? = null
+    val githubIssueId: Long? = null,
+    @ColumnInfo(name = "last_read_page")
+    val lastReadPage: Int = 0,
+    @ColumnInfo(name = "annotation_image_path")
+    val annotationImagePath: String? = null
 )

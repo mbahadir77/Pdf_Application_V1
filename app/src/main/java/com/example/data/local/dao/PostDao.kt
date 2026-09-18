@@ -57,6 +57,12 @@ interface PostDao {
     @Query("UPDATE posts SET comment_count = :count WHERE id = :postId")
     suspend fun updateCommentsCount(postId: String, count: Int)
 
+    @Query("UPDATE posts SET last_read_page = :page WHERE id = :postId")
+    suspend fun updateLastReadPage(postId: String, page: Int)
+
+    @Query("UPDATE posts SET annotation_image_path = :path WHERE id = :postId")
+    suspend fun updateAnnotationImagePath(postId: String, path: String?)
+
     @Query("DELETE FROM posts WHERE id = :postId")
     suspend fun deletePostById(postId: String)
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    İlim Diyârı - Leafora Tarzı Ferah Orman Yeşili Mesh Gradient Arka Plan (FAZ 13).
+    StartColor: #2A4B3A, CenterColor: #143326, EndColor: #0A1C15.
+    Glassmorphism kartlarının şeffaflıkla parlamasını sağlayan ferah zemin.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="270"
+        android:startColor="#2A4B3A"
+        android:centerColor="#143326"
+        android:endColor="#0A1C15" />
+</shape>

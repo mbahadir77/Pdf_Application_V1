@@ -21,7 +21,7 @@ enum class AppTheme(
         id = "glassmorphism",
         title = "Glassmorphism",
         subtitle = "Zümrüt Yeşili & Altın Sarısı (Varsayılan)",
-        backgroundDrawableRes = R.drawable.bg_auth_gradient,
+        backgroundDrawableRes = R.drawable.bg_mesh_gradient,
         primaryColorHex = "#D4AF37",
         accentColorHex = "#FFD700"
     ),
