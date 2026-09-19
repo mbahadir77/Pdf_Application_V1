@@ -8,6 +8,8 @@ import com.example.data.remote.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -24,6 +26,11 @@ class AuthRepository(
     private val gitHubService: GitHubService = RetrofitClient.gitHubService
 ) {
     private val _currentUserIdFlow = MutableStateFlow<String?>(sessionManager.getUserId())
+    val currentUserIdFlow: StateFlow<String?> = _currentUserIdFlow.asStateFlow()
+
+    fun notifyUserUpdated(user: UserEntity) {
+        _currentUserIdFlow.value = user.id
+    }
 
     fun isLoggedIn(): Boolean = sessionManager.isLoggedIn()
 
@@ -140,6 +147,43 @@ class AuthRepository(
         Result.success(newUser)
     }
 
+    suspend fun updateAvatar(avatarUrl: String?): Result<UserEntity> = withContext(Dispatchers.IO) {
+        var effectiveUserId = currentUserIdFlow.value ?: sessionManager.getUserId()
+        var user = if (!effectiveUserId.isNullOrBlank()) userDao.getUserByIdDirect(effectiveUserId) else null
+
+        if (user == null) {
+            val email = sessionManager.getUserEmail().orEmpty()
+            if (email.isNotBlank()) {
+                user = userDao.findUserByEmailDirect(email)
+            }
+        }
+        if (user == null) {
+            user = userDao.getLastLoggedInUserDirect()
+        }
+        if (user == null) {
+            user = sessionManager.toUserEntity()
+            if (user != null) {
+                userDao.insertUser(user)
+            }
+        }
+
+        if (user != null) {
+            userDao.updateAvatarUrl(user.id, avatarUrl)
+            val updated = user.copy(avatarUrl = avatarUrl, lastLoginAt = System.currentTimeMillis())
+            sessionManager.saveProfile(
+                fullName = updated.fullName,
+                academicTitle = updated.academicTitle,
+                bio = updated.bio,
+                avatarUrl = updated.avatarUrl,
+                githubUsername = updated.githubUsername
+            )
+            _currentUserIdFlow.value = updated.id
+            Result.success(updated)
+        } else {
+            Result.failure(Exception("Kullanıcı kaydı bulunamadı."))
+        }
+    }
+
     suspend fun updateProfile(
         userId: String,
         fullName: String,
@@ -148,9 +192,28 @@ class AuthRepository(
         avatarUrl: String?,
         githubUsername: String? = null
     ): Result<UserEntity> = withContext(Dispatchers.IO) {
-        val user = userDao.getUserByIdDirect(userId)
-            ?: userDao.findUserByEmailDirect(sessionManager.getUserEmail().orEmpty())
-            ?: return@withContext Result.failure(Exception("Kullanıcı kaydı bulunamadı."))
+        var effectiveUserId = userId.ifBlank { null } ?: currentUserIdFlow.value ?: sessionManager.getUserId()
+        var user = if (!effectiveUserId.isNullOrBlank()) userDao.getUserByIdDirect(effectiveUserId) else null
+
+        if (user == null) {
+            val email = sessionManager.getUserEmail().orEmpty()
+            if (email.isNotBlank()) {
+                user = userDao.findUserByEmailDirect(email)
+            }
+        }
+        if (user == null) {
+            user = userDao.getLastLoggedInUserDirect()
+        }
+        if (user == null) {
+            user = sessionManager.toUserEntity()
+            if (user != null) {
+                userDao.insertUser(user)
+            }
+        }
+
+        if (user == null) {
+            return@withContext Result.failure(Exception("Kullanıcı kaydı bulunamadı."))
+        }
 
         val updated = user.copy(
             fullName = fullName.trim(),

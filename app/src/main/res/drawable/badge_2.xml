@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Kademe 2: Gümüş Rozet -->
+    <path
+        android:fillColor="#334155"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="1.5"
+        android:pathData="M24,4 L38,10 L38,24 C38,33 32,41 24,44 C16,41 10,33 10,24 L10,10 Z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M24,7 L35,12 L35,23 C35,31 30,38 24,40.5 C18,38 13,31 13,23 L13,12 Z" />
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M24,14 L26.5,19 L32,19 L27.5,22.5 L29.5,28 L24,24.5 L18.5,28 L20.5,22.5 L16,19 L21.5,19 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M18,29 C21,27.5 23,28 24,29 C25,28 27,27.5 30,29 L30,34 C27,32.5 25,33 24,34 C23,33 21,32.5 18,34 Z" />
+</vector>

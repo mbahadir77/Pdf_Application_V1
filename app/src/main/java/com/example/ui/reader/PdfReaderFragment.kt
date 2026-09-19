@@ -1,6 +1,8 @@
 package com.example.ui.reader
 
 import android.os.Bundle
+import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,9 +46,28 @@ class PdfReaderFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupHardwareKeyListener(view)
         setupBackNavigation()
         setupListeners()
         currentPost?.let { loadPdfDocument(it) }
+    }
+
+    /**
+     * Donanım Seviyesinde Geri Tuşunu Yakalama (Emir 2):
+     * Kök görünüme (Root View) setOnKeyListener ekleyerek KeyEvent.KEYCODE_BACK yakalanır.
+     * Event tüketilir (return true) ve findNavController().popBackStack() çağrılarak çökme engellenir.
+     */
+    private fun setupHardwareKeyListener(view: View) {
+        view.isFocusableInTouchMode = true
+        view.requestFocus()
+        view.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+                handleBackPress()
+                true
+            } else {
+                false
+            }
+        }
     }
 
     private fun setupBackNavigation() {
@@ -63,10 +84,22 @@ class PdfReaderFragment : Fragment() {
     private fun handleBackPress() {
         if (onBackClickListener != null) {
             onBackClickListener?.invoke()
-        } else if (parentFragmentManager.backStackEntryCount > 0) {
-            parentFragmentManager.popBackStack()
-        } else {
-            (activity as? com.example.MainActivity)?.closeInternalPdfReaderPublic()
+            return
+        }
+
+        val popped = try {
+            findNavController().popBackStack()
+        } catch (e: Exception) {
+            Log.d("PdfReaderFragment", "NavController popBackStack fallback: ${e.message}")
+            false
+        }
+
+        if (!popped) {
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            } else {
+                (activity as? com.example.MainActivity)?.closeInternalPdfReaderPublic()
+            }
         }
     }
 
@@ -157,6 +190,35 @@ class PdfReaderFragment : Fragment() {
         fun newInstance(post: PostEntity): PdfReaderFragment {
             return PdfReaderFragment().apply {
                 setPost(post)
+            }
+        }
+    }
+}
+
+/**
+ * Güvenli Navigation popBackStack yardımcısı (Emir 2).
+ * NavHost / NavController mevcutsa doğrudan tetikler, aksi halde FragmentManager / Activity ile popBackStack yapar.
+ */
+private fun Fragment.findNavController(): SafeNavController = SafeNavController(this)
+
+private class SafeNavController(private val fragment: Fragment) {
+    fun popBackStack(): Boolean {
+        return try {
+            val navHostClass = Class.forName("androidx.navigation.fragment.NavHostFragment")
+            val method = navHostClass.getMethod("findNavController", Fragment::class.java)
+            val controller = method.invoke(null, fragment)
+            val popMethod = controller.javaClass.getMethod("popBackStack")
+            popMethod.invoke(controller) as? Boolean ?: false
+        } catch (_: Throwable) {
+            if (fragment.parentFragmentManager.backStackEntryCount > 0) {
+                fragment.parentFragmentManager.popBackStack()
+                true
+            } else if (fragment.activity?.supportFragmentManager?.backStackEntryCount ?: 0 > 0) {
+                fragment.activity?.supportFragmentManager?.popBackStack()
+                true
+            } else {
+                (fragment.activity as? com.example.MainActivity)?.closeInternalPdfReaderPublic()
+                true
             }
         }
     }

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Kilitli Rozet -->
+    <path
+        android:fillColor="#1E293B"
+        android:strokeColor="#475569"
+        android:strokeWidth="1.5"
+        android:pathData="M24,4 L38,10 L38,24 C38,33 32,41 24,44 C16,41 10,33 10,24 L10,10 Z" />
+    <!-- Kilit Gövdesi -->
+    <path
+        android:fillColor="#475569"
+        android:pathData="M19,23 H29 A2,2 0 0 1 31,25 V31 A2,2 0 0 1 29,33 H19 A2,2 0 0 1 17,31 V25 A2,2 0 0 1 19,23 Z" />
+    <!-- Kilit Halkası -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#64748B"
+        android:strokeWidth="2"
+        android:pathData="M21,23 V19 C21,17.3 22.3,16 24,16 C25.7,16 27,17.3 27,19 V23" />
+</vector>

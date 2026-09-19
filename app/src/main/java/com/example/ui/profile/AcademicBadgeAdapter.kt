@@ -51,8 +51,8 @@ class AcademicBadgeAdapter(
             binding.tvBadgeProgressCounter.text = "${badge.progressText} Eser"
             binding.pbBadgeProgress.progress = badge.progressPercent
 
-            // Gerçek Vektörel Madalyon İkonu (Bölüm 3.2)
-            binding.ivBadgeTierIcon.setImageResource(badge.tierBadgeVectorRes)
+            // Gerçek Resim (PNG) Rozet Motoru (Emir 4)
+            BadgeImageMapper.loadBadgeImage(binding.ivBadgeTierIcon, badge)
 
             binding.root.setOnClickListener {
                 onBadgeClick?.invoke(badge)

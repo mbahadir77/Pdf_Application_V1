@@ -104,6 +104,18 @@ class AuthViewModel(
         }
     }
 
+    fun updateAvatar(avatarUrl: String?) {
+        viewModelScope.launch {
+            _editProfileState.value = EditProfileUiState.Loading
+            val result = repository.updateAvatar(avatarUrl)
+            result.onSuccess { updatedUser ->
+                _editProfileState.value = EditProfileUiState.Success(updatedUser)
+            }.onFailure { ex ->
+                _editProfileState.value = EditProfileUiState.Error(ex.localizedMessage ?: "Profil fotoğrafı güncellenemedi.")
+            }
+        }
+    }
+
     fun updateProfile(
         fullName: String,
         academicTitle: String?,
@@ -111,7 +123,7 @@ class AuthViewModel(
         avatarUrl: String?,
         githubUsername: String? = null
     ) {
-        val user = currentUser.value ?: return
+        val safeUserId = currentUser.value?.id ?: repository.currentUserIdFlow.value.orEmpty()
         if (fullName.isBlank()) {
             _editProfileState.value = EditProfileUiState.Error("Ad ve soyad alanı boş bırakılamaz.")
             return
@@ -119,7 +131,7 @@ class AuthViewModel(
         viewModelScope.launch {
             _editProfileState.value = EditProfileUiState.Loading
             val result = repository.updateProfile(
-                userId = user.id,
+                userId = safeUserId,
                 fullName = fullName,
                 academicTitle = academicTitle,
                 bio = bio,

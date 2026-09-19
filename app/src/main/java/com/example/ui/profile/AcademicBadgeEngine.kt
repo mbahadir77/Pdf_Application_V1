@@ -31,6 +31,16 @@ data class AcademicBadge(
     },
     val tierTitle: String = rankTitle,
     val vectorIconRes: Int = AcademicBadgeEngine.getBadgeVectorRes(category, rankTitle),
+    val badgeImageRes: Int = BadgeImageMapper.getStaticBadgeRes(
+        when (level) {
+            in 16..20 -> 4
+            in 11..15 -> 3
+            in 6..10 -> 2
+            in 1..5 -> 1
+            else -> 0
+        },
+        isUnlocked
+    ),
     val tierBadgeVectorRes: Int = AcademicBadgeEngine.getTierBadgeVectorRes(
         when (level) {
             in 16..20 -> 4

@@ -85,6 +85,22 @@ class SessionManager(context: Context) {
         return prefs.getString(KEY_AUTH_TOKEN, null)
     }
 
+    fun getGitHubToken(): String? {
+        return prefs.getString("key_github_token", null) ?: getAuthToken()
+    }
+
+    fun saveGitHubToken(token: String) {
+        prefs.edit().putString("key_github_token", token.trim()).apply()
+    }
+
+    fun getGistId(): String? {
+        return prefs.getString("key_gist_id", null)
+    }
+
+    fun saveGistId(gistId: String) {
+        prefs.edit().putString("key_gist_id", gistId.trim()).apply()
+    }
+
     fun clearSession() {
         prefs.edit().clear().commit()
     }

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -116,7 +117,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val feedRepository by lazy {
-        FeedRepository(appDatabase.postDao(), RetrofitClient.gitHubService)
+        FeedRepository(appDatabase.postDao(), RetrofitClient.gitHubService, sessionManager)
     }
 
     private val splashViewModel: SplashViewModel by viewModels {
@@ -1649,6 +1650,16 @@ class MainActivity : AppCompatActivity() {
 
         val readerBinding = binding.viewPdfReader
         readerBinding.root.visibility = View.VISIBLE
+        readerBinding.root.isFocusableInTouchMode = true
+        readerBinding.root.requestFocus()
+        readerBinding.root.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+                closeInternalPdfReader()
+                true
+            } else {
+                false
+            }
+        }
         val enterAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_enter)
         readerBinding.root.startAnimation(enterAnim)
 
@@ -2245,6 +2256,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
         isItikafModeActive = false
+    }
+
+    /**
+     * Donanım Geri Tuşu Koruması (Emir 2):
+     * Donanım geri tuşuna basıldığında PDF okuyucu açıksa güvenle kapatılır ve uygulamanın çökmesi engellenir.
+     */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (binding.viewPdfReader.root.visibility == View.VISIBLE) {
+                closeInternalPdfReader()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onPause() {
