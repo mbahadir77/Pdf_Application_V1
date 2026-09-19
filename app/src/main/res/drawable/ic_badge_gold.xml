@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Altın Yaldız Kalkan (Imperial Gold Crest) -->
+    <path
+        android:fillColor="#784E00"
+        android:strokeColor="#FFD700"
+        android:strokeWidth="1.8"
+        android:pathData="M24,3 L39,9 L39,24 C39,34 33,42 24,45 C15,42 9,34 9,24 L9,9 Z" />
+
+    <!-- Parlak Kehribar ve Yaldız Dolgu -->
+    <path
+        android:fillColor="#B78103"
+        android:pathData="M24,6.5 L36,11.5 L36,23 C36,31.5 31,39 24,41.8 C17,39 12,31.5 12,23 L12,11.5 Z" />
+
+    <!-- Kraliyet Tacı / İlim Şemsesi -->
+    <path
+        android:fillColor="#FFE066"
+        android:pathData="M18,17 L21,21 L24,15 L27,21 L30,17 L31,23 L17,23 Z" />
+
+    <!-- Işıltılı Altın Yıldız -->
+    <path
+        android:fillColor="#FFF4B8"
+        android:pathData="M24,22 L26,26 L30.5,26.5 L27,29.5 L28,34 L24,31.5 L20,34 L21,29.5 L17.5,26.5 L22,26 Z" />
+
+    <!-- Altın Zümrüt Noktası -->
+    <path
+        android:fillColor="#0E6251"
+        android:pathData="M24,26 A1.5,1.5 0 1,0 24,29 A1.5,1.5 0 1,0 24,26 Z" />
+
+    <!-- Altın Kaide Çizgisi -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M16,36 L32,36 L30,38 L18,38 Z" />
+</vector>

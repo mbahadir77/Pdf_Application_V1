@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- İlim Diyârı - Klasik Ciltli Eser (Book Spine) Tasarımı (Faz 13) -->
+<!-- 'Tefsir-i Nesefi' veya 'Haşiyetü's-Sâvî' gibi klasik ciltli Arapça eserleri andıran zengin tasarım -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,11 +10,11 @@
     android:paddingTop="6dp"
     android:paddingBottom="12dp">
 
-    <!-- Ciltli Kitap Sırtı Gövdesi -->
+    <!-- Ciltli Kitap Sırtı Gövdesi (Bordo, Lacivert, Kahverengi Deri & Altın Yaldız) -->
     <LinearLayout
         android:id="@+id/container_book_spine"
-        android:layout_width="54dp"
-        android:layout_height="200dp"
+        android:layout_width="88dp"
+        android:layout_height="210dp"
         android:background="@drawable/bg_book_spine_burgundy"
         android:clickable="true"
         android:elevation="6dp"
@@ -20,55 +22,83 @@
         android:foreground="?attr/selectableItemBackground"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="4dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingHorizontal="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="6dp">
 
-        <!-- Üst Altın Yaldızlı Amblem / Mühür -->
+        <!-- Üst Altın Yaldızlı Cilt Mührü / Şemse -->
         <ImageView
             android:id="@+id/iv_book_spine_crest"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginTop="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginTop="26dp"
             android:contentDescription="Kitap Mührü"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_academic_logo"
-            app:tint="#FFD700" />
+            app:tint="#D4AF37" />
 
-        <!-- 90 Derece Dikey Kitap Başlığı (Yukarıdan Aşağı) -->
-        <com.example.ui.common.VerticalTextView
-            android:id="@+id/tv_book_spine_title"
-            android:layout_width="0dp"
+        <!-- Altın Yaldız Çerçeveli Kitabe Kartuşu (Yatay Kitap Başlığı) -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="6dp"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:fontFamily="serif"
+            android:background="@drawable/bg_book_title_cartouche"
             android:gravity="center"
-            android:letterSpacing="0.06"
-            android:maxLines="1"
-            android:paddingHorizontal="2dp"
-            android:textColor="#FFD700"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            tools:text="Sahih-i Buhari Muhtasarı" />
+            android:orientation="vertical"
+            android:padding="4dp">
 
-        <!-- Alt Kategori Kodu / Cilt İbaresi -->
+            <!-- YATAY Kitap Başlığı (Dikey Değil, 1-3 Satır Okunaklı Serif) -->
+            <TextView
+                android:id="@+id/tv_book_spine_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:letterSpacing="0.02"
+                android:lineSpacingExtra="2dp"
+                android:maxLines="3"
+                android:textColor="#FFD700"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="Tefsîr-i Nesefî" />
+
+            <!-- İnce Yaldız Çizgi / Ayraç -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="1dp"
+                android:layout_marginVertical="5dp"
+                android:background="#99D4AF37" />
+
+            <!-- Alt Kategori Kodu / Cilt İbaresi (Yatay) -->
+            <TextView
+                android:id="@+id/tv_book_spine_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:letterSpacing="0.05"
+                android:maxLines="1"
+                android:textColor="#D4AF37"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                tools:text="TEFSİR" />
+        </LinearLayout>
+
+        <!-- Alt Cilt Amblemi / İlim Diyârı Damgası -->
         <TextView
-            android:id="@+id/tv_book_spine_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="18dp"
-            android:ellipsize="end"
+            android:layout_marginBottom="26dp"
             android:fontFamily="serif"
-            android:gravity="center"
-            android:letterSpacing="0.04"
-            android:maxLines="1"
-            android:textColor="#C5A059"
-            android:textSize="9sp"
-            android:textStyle="bold"
-            tools:text="HADİS" />
+            android:letterSpacing="0.08"
+            android:text="İLİM DİYÂRI"
+            android:textColor="#80D4AF37"
+            android:textSize="7sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
 </FrameLayout>

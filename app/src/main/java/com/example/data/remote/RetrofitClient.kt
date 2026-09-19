@@ -29,7 +29,7 @@ object RetrofitClient {
             .build()
     }
 
-    private val moshi: Moshi by lazy {
+    val moshi: Moshi by lazy {
         Moshi.Builder()
             .addLast(KotlinJsonAdapterFactory())
             .build()

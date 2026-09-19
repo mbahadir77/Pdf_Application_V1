@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Osmanlı Kamış Kalem & Altın Hokka (Divit) -->
+    <!-- Divit / Kalem Gövdesi (Eğik Hat Kalemi) -->
+    <path
+        android:fillColor="#8C5523"
+        android:strokeColor="#5C330D"
+        android:strokeWidth="1"
+        android:pathData="M38,8 L35,6 L18,29 L21,31 Z" />
+
+    <!-- Kalem Altın Uç Bileziği -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M18,29 L21,31 L17,35 L15,33 Z" />
+
+    <!-- Kalemin Sivri Ucu (Noktaya Doğru İnen Hat Ucu) -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M15,33 L17,35 L12,39 Z" />
+
+    <!-- Damlayan Mürekkep Noktası -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M10,41 A2,2 0 1,0 10,45 A2,2 0 1,0 10,41 Z" />
+
+    <!-- Altın Hokka (İnkwell) -->
+    <path
+        android:fillColor="#B78103"
+        android:strokeColor="#FFD700"
+        android:strokeWidth="1.2"
+        android:pathData="M24,34 L36,34 L38,44 L22,44 Z" />
+    <path
+        android:fillColor="#FFE57F"
+        android:pathData="M26,31 L34,31 L35,34 L25,34 Z" />
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M28,32 A2,1 0 1,0 32,32 A2,1 0 1,0 28,32 Z" />
+</vector>

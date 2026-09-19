@@ -21,8 +21,8 @@ object AcademicBadgeDiffCallback : DiffUtil.ItemCallback<AcademicBadge>() {
 }
 
 /**
- * İlim Diyârı - 20 Kademeli Dev Rozet ve Rütbe Adaptörü (FAZ 9 Mega Update).
- * Glassmorphic kartlar, 20 seviyelik ilerleme ve rütbe gösterimi.
+ * İlim Diyârı - Gerçek Vektörel Rozet ve Rütbe Adaptörü (Faz 13).
+ * Emojilerden arındırılmış, yüksek çözünürlüklü vektör madalyonlar (Bronz, Gümüş, Altın, Elmas).
  */
 class AcademicBadgeAdapter(
     private val onBadgeClick: ((AcademicBadge) -> Unit)? = null
@@ -50,8 +50,9 @@ class AcademicBadgeAdapter(
             binding.tvBadgeDescription.text = badge.description
             binding.tvBadgeProgressCounter.text = "${badge.progressText} Eser"
             binding.pbBadgeProgress.progress = badge.progressPercent
-            binding.tvBadgeTierIcon.text = badge.tierIcon
-            binding.ivBadgeVectorIcon.setImageResource(badge.vectorIconRes)
+
+            // Gerçek Vektörel Madalyon İkonu (Bölüm 3.2)
+            binding.ivBadgeTierIcon.setImageResource(badge.tierBadgeVectorRes)
 
             binding.root.setOnClickListener {
                 onBadgeClick?.invoke(badge)
@@ -106,26 +107,26 @@ class AcademicBadgeAdapter(
                     }
                 }
 
-                // Yıldızlar
+                // Vektörel Yıldızlar (Emoji Değil, Vektör İkon)
                 binding.layoutBadgeStars.visibility = View.VISIBLE
-                binding.tvBadgeStar1.text = if (badge.level >= 5) "⭐" else "☆"
-                binding.tvBadgeStar2.text = if (badge.level >= 10) "⭐" else "☆"
-                binding.tvBadgeStar3.text = if (badge.level >= 15) "⭐" else "☆"
-                binding.tvBadgeStar4.text = if (badge.level >= 20) "⭐" else "☆"
+                binding.ivBadgeStar1.setImageResource(if (badge.level >= 5) R.drawable.ic_star_filled else R.drawable.ic_star_border)
+                binding.ivBadgeStar2.setImageResource(if (badge.level >= 10) R.drawable.ic_star_filled else R.drawable.ic_star_border)
+                binding.ivBadgeStar3.setImageResource(if (badge.level >= 15) R.drawable.ic_star_filled else R.drawable.ic_star_border)
+                binding.ivBadgeStar4.setImageResource(if (badge.level >= 20) R.drawable.ic_star_filled else R.drawable.ic_star_border)
 
                 if (badge.nextRankTitle != null) {
                     binding.tvBadgeNextTierHint.text = "Sıradaki: ${badge.nextRankTitle}"
                     binding.tvBadgeNextTierHint.visibility = View.VISIBLE
                 } else {
-                    binding.tvBadgeNextTierHint.text = "Zirve Rütbe 💎"
+                    binding.tvBadgeNextTierHint.text = "Zirve Rütbe"
                     binding.tvBadgeNextTierHint.visibility = View.VISIBLE
                 }
             } else {
                 // Kilitli Rozet: Gri / Soluk
                 binding.cardBadgeRoot.setBackgroundResource(R.drawable.bg_badge_locked)
-                binding.cardBadgeRoot.alpha = 0.5f
+                binding.cardBadgeRoot.alpha = 0.55f
                 binding.tvBadgeCategory.setTextColor(Color.parseColor("#A0AEC0"))
-                binding.tvBadgeLevelTag.text = "🔒 Kilitli"
+                binding.tvBadgeLevelTag.text = "KİLİTLİ"
                 binding.tvBadgeLevelTag.setTextColor(Color.parseColor("#718096"))
                 binding.tvBadgeTierTitle.text = "Mübtedî (Kilitli)"
                 binding.tvBadgeTierTitle.setTextColor(Color.parseColor("#718096"))

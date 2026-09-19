@@ -30,7 +30,17 @@ data class AcademicBadge(
         else -> 0
     },
     val tierTitle: String = rankTitle,
-    val vectorIconRes: Int = AcademicBadgeEngine.getBadgeVectorRes(category, rankTitle)
+    val vectorIconRes: Int = AcademicBadgeEngine.getBadgeVectorRes(category, rankTitle),
+    val tierBadgeVectorRes: Int = AcademicBadgeEngine.getTierBadgeVectorRes(
+        when (level) {
+            in 16..20 -> 4
+            in 11..15 -> 3
+            in 6..10 -> 2
+            in 1..5 -> 1
+            else -> 0
+        },
+        isUnlocked
+    )
 )
 
 object AcademicBadgeEngine {
@@ -222,7 +232,7 @@ object AcademicBadgeEngine {
                 // Zirve (20. Seviye)
                 rankTitle = rankList[19]
                 tierCategoryName = "Elmas Zirve (Seviye 20)"
-                tierIcon = "💎"
+                tierIcon = "Elmas"
                 tierColor = "#00E5FF"
                 targetCount = LEVEL_THRESHOLDS[19]
                 progressText = "$count/$targetCount"
@@ -241,22 +251,22 @@ object AcademicBadgeEngine {
                 when (level) {
                     in 16..19 -> {
                         tierCategoryName = "Elmas Kademe (Seviye $level)"
-                        tierIcon = "💎"
+                        tierIcon = "Elmas"
                         tierColor = "#00E5FF"
                     }
                     in 11..15 -> {
                         tierCategoryName = "Altın Kademe (Seviye $level)"
-                        tierIcon = "🥇"
+                        tierIcon = "Altın"
                         tierColor = "#FFD700"
                     }
                     in 6..10 -> {
                         tierCategoryName = "Gümüş Kademe (Seviye $level)"
-                        tierIcon = "🥈"
+                        tierIcon = "Gümüş"
                         tierColor = "#C0C0C0"
                     }
                     else -> {
                         tierCategoryName = "Bakır Kademe (Seviye $level)"
-                        tierIcon = "🥉"
+                        tierIcon = "Bakır"
                         tierColor = "#CD7F32"
                     }
                 }
@@ -264,7 +274,7 @@ object AcademicBadgeEngine {
                 // Kilitli (0 Eser)
                 rankTitle = "Kilitli (Mübtedî)"
                 tierCategoryName = "Kilitli"
-                tierIcon = "🔒"
+                tierIcon = "Kilitli"
                 tierColor = "#64748B"
                 targetCount = LEVEL_THRESHOLDS[0]
                 progressText = "$count/$targetCount"
@@ -324,6 +334,19 @@ object AcademicBadgeEngine {
             catLower.contains("akaid") || catLower.contains("kelâm") || lower.contains("tevhid") ||
                 lower.contains("burhân") -> com.example.R.drawable.ic_badge_star
             else -> com.example.R.drawable.ic_badge_book
+        }
+    }
+
+    /**
+     * Kademeye göre gerçek vektörel rozet madalyonunu döndürür (Bölüm 3.2).
+     */
+    fun getTierBadgeVectorRes(currentTier: Int, isUnlocked: Boolean): Int {
+        if (!isUnlocked) return com.example.R.drawable.ic_badge_locked_vector
+        return when (currentTier) {
+            4 -> com.example.R.drawable.ic_badge_diamond
+            3 -> com.example.R.drawable.ic_badge_gold
+            2 -> com.example.R.drawable.ic_badge_silver
+            else -> com.example.R.drawable.ic_badge_bronze
         }
     }
 }

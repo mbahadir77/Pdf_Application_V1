@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Elmas Kalkan (Celestial Diamond Shield) -->
+    <path
+        android:fillColor="#0C4A6E"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="1.8"
+        android:pathData="M24,3 L39,9 L39,24 C39,34 33,42 24,45 C15,42 9,34 9,24 L9,9 Z" />
+
+    <!-- Parlak Cam Göbeği Dolgu -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M24,6.5 L36,11.5 L36,23 C36,31.5 31,39 24,41.8 C17,39 12,31.5 12,23 L12,11.5 Z" />
+
+    <!-- Fasetli Elmas Geometrisi -->
+    <path
+        android:fillColor="#7DD3FC"
+        android:pathData="M18,18 L30,18 L34,24 L24,36 L14,24 Z" />
+
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M21,18 L27,18 L29,24 L24,24 L19,24 Z" />
+
+    <path
+        android:fillColor="#F0F9FF"
+        android:pathData="M24,24 L29,24 L24,36 Z" />
+
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M24,24 L19,24 L24,36 Z" />
+
+    <!-- Zirve Işıltı Noktası -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,14 L25,16 L27,17 L25,18 L24,20 L23,18 L21,17 L23,16 Z" />
+</vector>

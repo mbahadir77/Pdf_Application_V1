@@ -1,0 +1,44 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Ahşap Oyma Rahle & Mushaf -->
+    <!-- Sol ve Sağ Çapraz Ayaklar -->
+    <path
+        android:fillColor="#8D5B29"
+        android:strokeColor="#5E3814"
+        android:strokeWidth="1"
+        android:pathData="M14,40 L34,22 L32,20 L12,38 Z" />
+    <path
+        android:fillColor="#6E421A"
+        android:strokeColor="#5E3814"
+        android:strokeWidth="1"
+        android:pathData="M34,40 L14,22 L16,20 L36,38 Z" />
+
+    <!-- Rahle Oyma Göbeği -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M24,28 A2.5,2.5 0 1,0 24,33 A2.5,2.5 0 1,0 24,28 Z" />
+
+    <!-- Açık Mushaf / İlim Kitabı (Sol Sayfa) -->
+    <path
+        android:fillColor="#FFFDF0"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.2"
+        android:pathData="M11,18 C15,16 20,17 24,19 L24,27 C20,25 15,24 11,26 Z" />
+
+    <!-- Açık Mushaf / İlim Kitabı (Sağ Sayfa) -->
+    <path
+        android:fillColor="#FFF8DC"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.2"
+        android:pathData="M37,18 C33,16 28,17 24,19 L24,27 C28,25 33,24 37,26 Z" />
+
+    <!-- Altın Varak Satırlar -->
+    <path
+        android:fillColor="#99D4AF37"
+        android:pathData="M14,20 L22,21.5 M14,22.5 L22,24 M26,21.5 L34,20 M26,24 L34,22.5"
+        android:strokeColor="#99D4AF37"
+        android:strokeWidth="0.8" />
+</vector>

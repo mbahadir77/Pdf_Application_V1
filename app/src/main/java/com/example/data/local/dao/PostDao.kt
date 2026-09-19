@@ -42,6 +42,9 @@ interface PostDao {
     @Query("SELECT COUNT(*) FROM posts")
     suspend fun getPostCount(): Int
 
+    @Query("SELECT * FROM posts ORDER BY created_at DESC")
+    suspend fun getAllPostsList(): List<PostEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPosts(posts: List<PostEntity>)
 

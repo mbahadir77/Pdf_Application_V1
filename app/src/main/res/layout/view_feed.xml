@@ -19,12 +19,17 @@
         android:paddingBottom="6dp">
 
         <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:contentDescription="@string/app_name"
+            android:id="@+id/iv_feed_toolbar_avatar"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:clickable="true"
+            android:contentDescription="Kullanıcı Profili"
+            android:focusable="true"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_academic_logo"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            app:strokeColor="@color/gold_vibrant"
+            app:strokeWidth="1.5dp" />
 
         <LinearLayout
             android:layout_width="0dp"

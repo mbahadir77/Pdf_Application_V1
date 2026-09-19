@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Kilitli Kalkan (Muted Slate Shield) -->
+    <path
+        android:fillColor="#1E293B"
+        android:strokeColor="#475569"
+        android:strokeWidth="1.5"
+        android:pathData="M24,4 L38,10 L38,24 C38,33 32,41 24,44 C16,41 10,33 10,24 L10,10 Z" />
+
+    <!-- Kilit Gövdesi -->
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M17,23 L31,23 A2,2 0 0,1 33,25 L33,35 A2,2 0 0,1 31,37 L17,37 A2,2 0 0,1 15,35 L15,25 A2,2 0 0,1 17,23 Z" />
+
+    <!-- Kilit Kemeri (Shackle) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#94A3B8"
+        android:strokeWidth="2.5"
+        android:pathData="M19,23 L19,18 A5,5 0 0,1 29,18 L29,23" />
+
+    <!-- Anahtar Deliği -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M24,27 A1.8,1.8 0 1,0 24,30.6 L24,33 L24,33 Z" />
+</vector>

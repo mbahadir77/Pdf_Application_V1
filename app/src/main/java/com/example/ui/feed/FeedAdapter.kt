@@ -123,10 +123,11 @@ class FeedAdapter(
             binding.tvBookSpineTitle.text = post.title
             binding.tvBookSpineCategory.text = post.category.uppercase()
 
-            // Bordo, Lacivert, Zümrüt dönüşümlü asil deri cilt sırtı
-            val spineBackgroundRes = when (position % 3) {
+            // Bordo, Lacivert, Koyu Kahve, Zümrüt dönüşümlü asil deri cilt sırtı
+            val spineBackgroundRes = when (position % 4) {
                 0 -> R.drawable.bg_book_spine_burgundy
                 1 -> R.drawable.bg_book_spine_navy
+                2 -> R.drawable.bg_book_spine_brown
                 else -> R.drawable.bg_book_spine_emerald
             }
             binding.containerBookSpine.setBackgroundResource(spineBackgroundRes)

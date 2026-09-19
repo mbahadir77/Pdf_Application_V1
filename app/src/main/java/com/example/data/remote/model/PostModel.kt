@@ -1,12 +1,15 @@
 package com.example.data.remote.model
 
 import com.example.data.local.entity.PostEntity
+import com.squareup.moshi.JsonClass
 
 /**
  * İlmNet - Post Domain Modeli.
  */
+@JsonClass(generateAdapter = true)
 data class PostModel(
     val id: String,
+    val userId: String? = null,
     val title: String,
     val description: String,
     val authorName: String,
@@ -24,6 +27,7 @@ data class PostModel(
 
 fun PostEntity.toModel(): PostModel = PostModel(
     id = id,
+    userId = userId,
     title = title,
     description = description,
     authorName = authorName,
@@ -41,6 +45,7 @@ fun PostEntity.toModel(): PostModel = PostModel(
 
 fun PostModel.toEntity(githubIssueId: Long? = null): PostEntity = PostEntity(
     id = id,
+    userId = userId,
     title = title,
     description = description,
     authorName = authorName,

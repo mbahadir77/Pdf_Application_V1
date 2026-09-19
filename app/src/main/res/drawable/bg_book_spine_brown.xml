@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- İlim Diyârı - Klasik Arapça/Osmanlı Ciltli Eser Sırtı (Bordo Deri & Altın Yaldız) -->
+<!-- İlim Diyârı - Klasik Arapça/Osmanlı Ciltli Eser Sırtı (Koyu Kahverengi Deri & Altın Yaldız) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 1. Hakiki Cilt Derisi Zemin (Zengin Bordo Degrade) -->
+    <!-- 1. Koyu Kahve Deri Zemin -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="0"
-                android:startColor="#2B060D"
-                android:centerColor="#4D0E19"
-                android:endColor="#220409"
+                android:startColor="#1E100A"
+                android:centerColor="#3A2116"
+                android:endColor="#150B07"
                 android:type="linear" />
             <corners android:radius="5dp" />
             <stroke
@@ -17,7 +17,7 @@
         </shape>
     </item>
 
-    <!-- 2. İç Altın Yaldız Çerçeve (Gilded Inner Frame) -->
+    <!-- 2. İç Altın Yaldız Çerçeve -->
     <item
         android:left="4dp"
         android:right="4dp"
@@ -31,7 +31,7 @@
         </shape>
     </item>
 
-    <!-- 3. Üst Cilt Sırtı Nervürü / Şiraze Kuşağı (Üst Kabartma Çizgi) -->
+    <!-- 3. Üst Cilt Sırtı Nervürü / Şiraze Kuşağı -->
     <item
         android:top="16dp"
         android:left="5dp"
@@ -52,7 +52,7 @@
         </shape>
     </item>
 
-    <!-- 4. Alt Cilt Sırtı Nervürü / Şiraze Kuşağı (Alt Kabartma Çizgi) -->
+    <!-- 4. Alt Cilt Sırtı Nervürü / Şiraze Kuşağı -->
     <item
         android:bottom="22dp"
         android:left="7dp"

@@ -10,29 +10,29 @@
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- Üst Satır: Kategori İkonu, Adı ve Seviye Rozeti (LVL X) -->
+    <!-- Üst Satır: Parlak Çerçeveli Gerçek Vektörel Rozet İkonu, Kategori Adı ve Seviye (LVL) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/iv_badge_vector_icon"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_marginEnd="6dp"
-            android:contentDescription="Rozet Vektör İkonu"
-            android:src="@drawable/ic_badge_book"
-            app:tint="@color/gold_vibrant" />
+        <!-- Parlak Vitray Çerçeve İçinde Vektörel Rozet (Bronz/Gümüş/Altın/Elmas) -->
+        <FrameLayout
+            android:id="@+id/layout_badge_icon_frame"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_badge_icon_frame">
 
-        <TextView
-            android:id="@+id/tv_badge_tier_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:textSize="18sp"
-            tools:text="📜" />
+            <ImageView
+                android:id="@+id/iv_badge_tier_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:contentDescription="Akademik Rozet"
+                android:src="@drawable/ic_badge_bronze" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tv_badge_category"
@@ -85,44 +85,45 @@
         android:textSize="10sp"
         tools:text="Muhaddis: 13 Hadis eseri mütalaa ettin/paylaştın." />
 
-    <!-- 4 Kademeli Yıldızlar (Gizli veya Seviye Temsilcisi) -->
+    <!-- 4 Kademeli Gerçek Vektörel Yıldızlar (Emoji Değil, Vektör İkon) -->
     <LinearLayout
         android:id="@+id/layout_badge_stars"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tv_badge_star1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="⭐"
-            android:textSize="10sp" />
+        <ImageView
+            android:id="@+id/iv_badge_star1"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="Yıldız 1"
+            android:src="@drawable/ic_star_filled" />
 
-        <TextView
-            android:id="@+id/tv_badge_star2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:text="⭐"
-            android:textSize="10sp" />
+        <ImageView
+            android:id="@+id/iv_badge_star2"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginStart="3dp"
+            android:contentDescription="Yıldız 2"
+            android:src="@drawable/ic_star_filled" />
 
-        <TextView
-            android:id="@+id/tv_badge_star3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:text="⭐"
-            android:textSize="10sp" />
+        <ImageView
+            android:id="@+id/iv_badge_star3"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginStart="3dp"
+            android:contentDescription="Yıldız 3"
+            android:src="@drawable/ic_star_filled" />
 
-        <TextView
-            android:id="@+id/tv_badge_star4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:text="⭐"
-            android:textSize="10sp" />
+        <ImageView
+            android:id="@+id/iv_badge_star4"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginStart="3dp"
+            android:contentDescription="Yıldız 4"
+            android:src="@drawable/ic_star_border" />
     </LinearLayout>
 
     <!-- İlerleme Çubuğu -->

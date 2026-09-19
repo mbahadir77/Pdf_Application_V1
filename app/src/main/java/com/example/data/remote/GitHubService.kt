@@ -67,4 +67,47 @@ interface GitHubService {
         @Path("repo") repo: String,
         @Path("comment_id") commentId: Long
     ): Response<Unit>
+
+    // ============================================================
+    // FAZ 13: Global JSON Senkronizasyonu (Gist / Repo Content)
+    // ============================================================
+
+    @GET("gists/{gist_id}")
+    suspend fun getGist(
+        @Path("gist_id") gistId: String
+    ): Response<com.example.data.remote.model.GitHubGistResponse>
+
+    @retrofit2.http.PATCH("gists/{gist_id}")
+    suspend fun updateGist(
+        @Header("Authorization") token: String?,
+        @Path("gist_id") gistId: String,
+        @Body request: com.example.data.remote.model.UpdateGistRequest
+    ): Response<com.example.data.remote.model.GitHubGistResponse>
+
+    @POST("gists")
+    suspend fun createGist(
+        @Header("Authorization") token: String?,
+        @Body request: com.example.data.remote.model.CreateGistRequest
+    ): Response<com.example.data.remote.model.GitHubGistResponse>
+
+    @GET("repos/{owner}/{repo}/contents/{path}")
+    suspend fun getRepoContent(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+        @Path("path") path: String
+    ): Response<com.example.data.remote.model.GitHubRepoContentResponse>
+
+    @retrofit2.http.PUT("repos/{owner}/{repo}/contents/{path}")
+    suspend fun updateRepoContent(
+        @Header("Authorization") token: String?,
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+        @Path("path") path: String,
+        @Body request: com.example.data.remote.model.UpdateRepoContentRequest
+    ): Response<com.example.data.remote.model.GitHubRepoContentResponse>
+
+    @GET
+    suspend fun getRawJsonString(
+        @retrofit2.http.Url url: String
+    ): Response<okhttp3.ResponseBody>
 }

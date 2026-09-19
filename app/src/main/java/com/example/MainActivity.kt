@@ -336,6 +336,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         com.example.data.pref.SessionManager(this).updateLastActiveTime()
+        authViewModel.currentUser.value?.let { user ->
+            displayAvatar(binding.viewFeed.ivFeedToolbarAvatar, user.avatarUrl)
+            displayAvatar(binding.viewDashboard.ivDashAvatar, user.avatarUrl)
+        }
         if (itikafFailed) {
             itikafFailed = false
             IlmToast.error(this, "İtikâf Modu bozuldu! Uygulamadan ayrıldığınız için odaklanma zinciri kırıldı.", title = "İtikâf İhlali ⚠️")
@@ -1755,6 +1759,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun closeInternalPdfReaderPublic() {
+        closeInternalPdfReader()
+    }
+
     private fun closeInternalPdfReader() {
         if (isItikafModeActive) {
             exitItikafMode(userExitedManually = true)
@@ -1922,6 +1930,12 @@ class MainActivity : AppCompatActivity() {
                             dashBinding.tvDashUserBio.visibility = View.GONE
                         }
                         displayAvatar(dashBinding.ivDashAvatar, user.avatarUrl)
+                        displayAvatar(binding.viewFeed.ivFeedToolbarAvatar, user.avatarUrl)
+
+                        binding.viewFeed.ivFeedToolbarAvatar.setOnClickListener {
+                            feedViewModel.selectNavTab(NavTab.PROFILE)
+                            switchMainTab(NavTab.PROFILE)
+                        }
 
                         val settingsBinding = binding.viewSettings
                         settingsBinding.tvSettingsUserName.text = user.fullName

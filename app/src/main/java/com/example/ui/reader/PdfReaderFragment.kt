@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,14 +15,15 @@ import com.example.databinding.ViewPdfReaderBinding
 import kotlinx.coroutines.launch
 
 /**
- * İlmNet - Yerleşik PDF Okuyucu Fragment'ı (Faz 3).
+ * İlim Diyârı - Yerleşik PDF Okuyucu Fragment'ı (Faz 3 & 13).
  * android.graphics.pdf.PdfRenderer kütüphanesini kullanarak PDF belgesini
  * harici tarayıcıya (Chrome vb.) ihtiyaç duymadan uygulama içinde tam ekran render eder.
  *
- * Üst bar modları:
- * 1. Göz: Sadece kaydırma ve okuma modu (dokunma kaydırmaya aktarılır).
- * 2. Kalem: Fosforlu serbest el çizim/vurgulama modu.
+ * Geri (Back) tuşuna basıldığında uygulamanın tamamen kapanmasını (finish) engeller;
+ * OnBackPressedCallback ile güvenli bir şekilde Ana Akış'a (Feed) dönüş yapar.
  */
+typealias PdfViewerFragment = PdfReaderFragment
+
 class PdfReaderFragment : Fragment() {
 
     private var _binding: ViewPdfReaderBinding? = null
@@ -42,8 +44,30 @@ class PdfReaderFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupBackNavigation()
         setupListeners()
         currentPost?.let { loadPdfDocument(it) }
+    }
+
+    private fun setupBackNavigation() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    handleBackPress()
+                }
+            }
+        )
+    }
+
+    private fun handleBackPress() {
+        if (onBackClickListener != null) {
+            onBackClickListener?.invoke()
+        } else if (parentFragmentManager.backStackEntryCount > 0) {
+            parentFragmentManager.popBackStack()
+        } else {
+            (activity as? com.example.MainActivity)?.closeInternalPdfReaderPublic()
+        }
     }
 
     fun setPost(post: PostEntity) {
@@ -59,7 +83,7 @@ class PdfReaderFragment : Fragment() {
 
     private fun setupListeners() {
         binding.btnReaderBack.setOnClickListener {
-            onBackClickListener?.invoke()
+            handleBackPress()
         }
 
         binding.btnReaderModeEye.setOnClickListener {
