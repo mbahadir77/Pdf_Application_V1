@@ -81,10 +81,13 @@ import com.example.ui.reader.PdfDocumentHelper
 import com.example.ui.reader.PdfPageAdapter
 import com.example.ui.reader.PdfSearchEngine
 import com.example.ui.reader.PdfSearchResultAdapter
+import com.example.ui.reader.PdfReaderFragment
+import com.example.ui.reader.PdfViewerFragment
 import com.example.ui.splash.SplashNavigationEvent
 import com.example.ui.splash.SplashNavigationState
 import com.example.ui.splash.SplashViewModel
 import coil.load
+import coil.request.CachePolicy
 import coil.transform.CircleCropTransformation
 import com.example.ui.settings.AboutBottomSheetDialogFragment
 import com.example.ui.settings.AppSettingsPreferences
@@ -989,12 +992,17 @@ class MainActivity : AppCompatActivity() {
             }
             imageView.load(model) {
                 crossfade(true)
+                memoryCachePolicy(CachePolicy.DISABLED)
+                diskCachePolicy(CachePolicy.DISABLED)
+                networkCachePolicy(CachePolicy.WRITE_ONLY)
                 placeholder(R.drawable.ic_person_outline)
                 error(R.drawable.ic_person_outline)
                 transformations(CircleCropTransformation())
             }
         } else {
             imageView.load(R.drawable.ic_person_outline) {
+                memoryCachePolicy(CachePolicy.DISABLED)
+                diskCachePolicy(CachePolicy.DISABLED)
                 transformations(CircleCropTransformation())
             }
         }
@@ -1650,16 +1658,6 @@ class MainActivity : AppCompatActivity() {
 
         val readerBinding = binding.viewPdfReader
         readerBinding.root.visibility = View.VISIBLE
-        readerBinding.root.isFocusableInTouchMode = true
-        readerBinding.root.requestFocus()
-        readerBinding.root.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                closeInternalPdfReader()
-                true
-            } else {
-                false
-            }
-        }
         val enterAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_enter)
         readerBinding.root.startAnimation(enterAnim)
 
@@ -2136,24 +2134,27 @@ class MainActivity : AppCompatActivity() {
                             else -> "🔒 Mübtedî"
                         }
 
-                        // Rozet seviye artışı / yeni rozet kazanımı durumunda OS Push Bildirimi gönder
-                        val currentMap = badgeList.associate { it.category to it.level }
-                        val prevMap = previousBadgeLevels
-                        if (prevMap != null) {
-                            for (badge in badgeList) {
-                                val oldLevel = prevMap[badge.category] ?: 0
-                                if (badge.level > oldLevel && badge.isUnlocked) {
-                                    NotificationHelper.showBadgeUnlockedNotification(
-                                        context = this@MainActivity,
-                                        categoryName = badge.category,
-                                        rankTitle = badge.rankTitle,
-                                        level = badge.level,
-                                        icon = badge.icon
-                                    )
+                        // Rozet seviye artışı / yeni rozet kazanımı durumunda OS Push Bildirimi gönder (SharedPreferences Çözümü)
+                        // Room DB gecikmeleri veya her girişte bildirim spamını önlemek için SessionManager kullanılır:
+                        // Yalnızca mevcut seviye (level) > last_notified_badge_level ise tetiklenir ve yeni seviye kaydedilir.
+                        val sessionMgr = SessionManager(this@MainActivity)
+                        for (badge in badgeList) {
+                            val lastNotifiedLevel = sessionMgr.getLastNotifiedBadgeLevel(badge.category)
+                            if (badge.isUnlocked && badge.level > lastNotifiedLevel) {
+                                NotificationHelper.showBadgeUnlockedNotification(
+                                    context = this@MainActivity,
+                                    categoryName = badge.category,
+                                    rankTitle = badge.rankTitle,
+                                    level = badge.level,
+                                    icon = badge.icon
+                                )
+                                sessionMgr.saveLastNotifiedBadgeLevel(badge.category, badge.level)
+                                if (badge.level > sessionMgr.getLastNotifiedBadgeLevel()) {
+                                    sessionMgr.saveLastNotifiedBadgeLevel(badge.level)
                                 }
                             }
                         }
-                        previousBadgeLevels = currentMap
+                        previousBadgeLevels = badgeList.associate { it.category to it.level }
                     }
                 }
             }
@@ -2256,20 +2257,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         isItikafModeActive = false
-    }
-
-    /**
-     * Donanım Geri Tuşu Koruması (Emir 2):
-     * Donanım geri tuşuna basıldığında PDF okuyucu açıksa güvenle kapatılır ve uygulamanın çökmesi engellenir.
-     */
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (binding.viewPdfReader.root.visibility == View.VISIBLE) {
-                closeInternalPdfReader()
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
     }
 
     override fun onPause() {

@@ -101,6 +101,22 @@ class SessionManager(context: Context) {
         prefs.edit().putString("key_gist_id", gistId.trim()).apply()
     }
 
+    fun getLastNotifiedBadgeLevel(category: String): Int {
+        return prefs.getInt("key_last_badge_level_${category.lowercase().trim()}", 0)
+    }
+
+    fun saveLastNotifiedBadgeLevel(category: String, level: Int) {
+        prefs.edit().putInt("key_last_badge_level_${category.lowercase().trim()}", level).apply()
+    }
+
+    fun getLastNotifiedBadgeLevel(): Int {
+        return prefs.getInt("key_last_notified_badge_level", 0)
+    }
+
+    fun saveLastNotifiedBadgeLevel(level: Int) {
+        prefs.edit().putInt("key_last_notified_badge_level", level).apply()
+    }
+
     fun clearSession() {
         prefs.edit().clear().commit()
     }

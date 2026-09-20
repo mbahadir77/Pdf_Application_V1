@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
+import coil.request.CachePolicy
 import com.example.R
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.FollowEntity
@@ -93,6 +94,8 @@ class VisitorProfileFragment : Fragment() {
         if (!avatarUrl.isNullOrBlank()) {
             binding.ivVisitorAvatar.load(avatarUrl) {
                 crossfade(true)
+                memoryCachePolicy(CachePolicy.DISABLED)
+                diskCachePolicy(CachePolicy.DISABLED)
                 placeholder(R.drawable.ic_academic_logo)
                 error(R.drawable.ic_academic_logo)
             }

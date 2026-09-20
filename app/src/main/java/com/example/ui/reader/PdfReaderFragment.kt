@@ -2,7 +2,6 @@ package com.example.ui.reader
 
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +16,11 @@ import com.example.databinding.ViewPdfReaderBinding
 import kotlinx.coroutines.launch
 
 /**
- * İlim Diyârı - Yerleşik PDF Okuyucu Fragment'ı (Faz 3 & 13).
- * android.graphics.pdf.PdfRenderer kütüphanesini kullanarak PDF belgesini
- * harici tarayıcıya (Chrome vb.) ihtiyaç duymadan uygulama içinde tam ekran render eder.
+ * İlim Diyârı - Yerleşik PDF Okuyucu Fragment'ı.
+ * android.graphics.pdf.PdfRenderer kullanarak PDF belgesini uygulama içinde tam ekran render eder.
  *
- * Geri (Back) tuşuna basıldığında uygulamanın tamamen kapanmasını (finish) engeller;
- * OnBackPressedCallback ile güvenli bir şekilde Ana Akış'a (Feed) dönüş yapar.
+ * Geri (Back) tuşuna basıldığında donanım ve yazılım geri isteklerini OnBackPressedCallback ile
+ * yakalayarak uygulamanın kapanmasını önler ve güvenli şekilde önceki ekrana döner.
  */
 typealias PdfViewerFragment = PdfReaderFragment
 
@@ -34,6 +32,7 @@ class PdfReaderFragment : Fragment() {
     private var currentPost: PostEntity? = null
     private var pdfAdapter: PdfPageAdapter? = null
     private var onBackClickListener: (() -> Unit)? = null
+    private var backPressedCallback: OnBackPressedCallback? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,39 +45,20 @@ class PdfReaderFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHardwareKeyListener(view)
         setupBackNavigation()
         setupListeners()
         currentPost?.let { loadPdfDocument(it) }
     }
 
-    /**
-     * Donanım Seviyesinde Geri Tuşunu Yakalama (Emir 2):
-     * Kök görünüme (Root View) setOnKeyListener ekleyerek KeyEvent.KEYCODE_BACK yakalanır.
-     * Event tüketilir (return true) ve findNavController().popBackStack() çağrılarak çökme engellenir.
-     */
-    private fun setupHardwareKeyListener(view: View) {
-        view.isFocusableInTouchMode = true
-        view.requestFocus()
-        view.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+    private fun setupBackNavigation() {
+        backPressedCallback?.remove()
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
                 handleBackPress()
-                true
-            } else {
-                false
             }
         }
-    }
-
-    private fun setupBackNavigation() {
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    handleBackPress()
-                }
-            }
-        )
+        backPressedCallback = callback
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
     private fun handleBackPress() {
@@ -115,6 +95,7 @@ class PdfReaderFragment : Fragment() {
     }
 
     private fun setupListeners() {
+        // Toolbar Geri Butonu
         binding.btnReaderBack.setOnClickListener {
             handleBackPress()
         }
@@ -134,10 +115,11 @@ class PdfReaderFragment : Fragment() {
     }
 
     fun loadPdfDocument(post: PostEntity) {
-        binding.tvReaderDocTitle.text = post.title
-        binding.tvReaderDocAuthor.text = "${post.authorName} • ${post.category}"
-        binding.layoutReaderLoading.visibility = View.VISIBLE
-        binding.rvPdfPages.visibility = View.GONE
+        val b = _binding ?: return
+        b.tvReaderDocTitle.text = post.title
+        b.tvReaderDocAuthor.text = "${post.authorName} • ${post.category}"
+        b.layoutReaderLoading.visibility = View.VISIBLE
+        b.rvPdfPages.visibility = View.GONE
 
         setToolMode(isPenMode = false)
 
@@ -145,42 +127,52 @@ class PdfReaderFragment : Fragment() {
             try {
                 val pdfFile = PdfDocumentHelper.preparePdfFile(requireContext(), post)
                 pdfAdapter?.close()
-                val adapter = PdfPageAdapter(pdfFile)
+                val adapter = PdfPageAdapter(
+                    pdfFile = pdfFile,
+                    postId = post.id
+                )
                 pdfAdapter = adapter
 
-                binding.rvPdfPages.apply {
-                    layoutManager = LinearLayoutManager(requireContext())
-                    this.adapter = adapter
+                _binding?.let { currentBinding ->
+                    currentBinding.rvPdfPages.apply {
+                        layoutManager = LinearLayoutManager(requireContext())
+                        this.adapter = adapter
+                    }
+                    currentBinding.layoutReaderLoading.visibility = View.GONE
+                    currentBinding.rvPdfPages.visibility = View.VISIBLE
                 }
-
-                binding.layoutReaderLoading.visibility = View.GONE
-                binding.rvPdfPages.visibility = View.VISIBLE
             } catch (e: Exception) {
-                binding.layoutReaderLoading.visibility = View.GONE
-                Toast.makeText(
-                    requireContext(),
-                    "PDF belgesi işlenemedi: ${e.localizedMessage}",
-                    Toast.LENGTH_LONG
-                ).show()
+                _binding?.let { currentBinding ->
+                    currentBinding.layoutReaderLoading.visibility = View.GONE
+                    Toast.makeText(
+                        requireContext(),
+                        "PDF belgesi işlenemedi: ${e.localizedMessage}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
 
     private fun setToolMode(isPenMode: Boolean) {
         pdfAdapter?.isDrawingMode = isPenMode
-        if (isPenMode) {
-            binding.btnReaderModePen.setBackgroundResource(R.drawable.bg_tab_active)
-            binding.btnReaderModeEye.setBackgroundResource(R.drawable.bg_tab_inactive)
-            binding.tvReaderModeHint.text = "✍️ Kalem Modu: Sayfa üzerine dokunarak fosforlu sarı vurgulama yapın."
-        } else {
-            binding.btnReaderModeEye.setBackgroundResource(R.drawable.bg_tab_active)
-            binding.btnReaderModePen.setBackgroundResource(R.drawable.bg_tab_inactive)
-            binding.tvReaderModeHint.text = "👀 Okuma Modu: Sayfaları dikey kaydırarak inceleyin."
+        _binding?.let { b ->
+            if (isPenMode) {
+                b.btnReaderModePen.setBackgroundResource(R.drawable.bg_tab_active)
+                b.btnReaderModeEye.setBackgroundResource(R.drawable.bg_tab_inactive)
+                b.tvReaderModeHint.text = "✍️ Kalem Modu: Sayfa üzerine dokunarak fosforlu sarı vurgulama yapın."
+            } else {
+                b.btnReaderModeEye.setBackgroundResource(R.drawable.bg_tab_active)
+                b.btnReaderModePen.setBackgroundResource(R.drawable.bg_tab_inactive)
+                b.tvReaderModeHint.text = "👀 Okuma Modu: Sayfaları dikey kaydırarak inceleyin."
+            }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        backPressedCallback?.remove()
+        backPressedCallback = null
         pdfAdapter?.close()
         pdfAdapter = null
         _binding = null
@@ -196,7 +188,7 @@ class PdfReaderFragment : Fragment() {
 }
 
 /**
- * Güvenli Navigation popBackStack yardımcısı (Emir 2).
+ * Güvenli Navigation popBackStack yardımcısı.
  * NavHost / NavController mevcutsa doğrudan tetikler, aksi halde FragmentManager / Activity ile popBackStack yapar.
  */
 private fun Fragment.findNavController(): SafeNavController = SafeNavController(this)

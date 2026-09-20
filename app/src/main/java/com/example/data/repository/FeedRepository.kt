@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import okhttp3.CacheControl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -163,17 +164,21 @@ class FeedRepository(
             Log.w(TAG, "GitHub Content API GET hatası: ${e.message}")
         }
 
-        // 2. Yöntem: OkHttp ile Doğrudan Raw CDN URL GET İsteği
+        // 2. Yöntem: OkHttp ile Doğrudan Raw CDN URL GET İsteği (Cache-Busting & FORCE_NETWORK)
         val rawUrls = listOf(
             "https://raw.githubusercontent.com/$owner/$repo/main/$POSTS_JSON_PATH",
             "https://raw.githubusercontent.com/$owner/$repo/master/$POSTS_JSON_PATH"
         )
         for (rawUrl in rawUrls) {
             try {
+                val noCacheUrl = "$rawUrl?t=${System.currentTimeMillis()}"
                 val request = Request.Builder()
-                    .url(rawUrl)
+                    .url(noCacheUrl)
+                    .cacheControl(CacheControl.FORCE_NETWORK)
                     .header("User-Agent", "IlimDiyari-Academic/1.0")
                     .header("Accept", "application/json")
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
                     .get()
                     .build()
 
@@ -184,7 +189,7 @@ class FeedRepository(
                         val models = postsAdapter.fromJson(bodyString).orEmpty()
                         resultList.addAll(models.map { it.toEntity() })
                         if (resultList.isNotEmpty()) {
-                            Log.d(TAG, "Raw GitHub CDN ($rawUrl) üzerinden ${resultList.size} eser çekildi.")
+                            Log.d(TAG, "Raw GitHub CDN ($noCacheUrl) üzerinden ${resultList.size} eser çekildi.")
                             return resultList
                         }
                     }
@@ -194,13 +199,18 @@ class FeedRepository(
             }
         }
 
-        // 3. Yöntem: HttpURLConnection ile Saf Ağ İsteği (Fallback)
+        // 3. Yöntem: HttpURLConnection ile Saf Ağ İsteği (Fallback & Cache-Busting)
         try {
-            val connection = URL("https://raw.githubusercontent.com/$owner/$repo/main/$POSTS_JSON_PATH").openConnection() as HttpURLConnection
+            val fallbackUrl = "https://raw.githubusercontent.com/$owner/$repo/main/$POSTS_JSON_PATH?t=${System.currentTimeMillis()}"
+            val connection = URL(fallbackUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
+            connection.useCaches = false
+            connection.defaultUseCaches = false
             connection.connectTimeout = 10000
             connection.readTimeout = 10000
             connection.setRequestProperty("User-Agent", "IlimDiyari-Academic/1.0")
+            connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
+            connection.setRequestProperty("Pragma", "no-cache")
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 val reader = BufferedReader(InputStreamReader(connection.inputStream))
                 val jsonString = reader.readText()

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.request.CachePolicy
 import com.example.R
 import com.example.data.local.entity.PostEntity
 import com.example.databinding.ItemPostBinding
@@ -153,6 +154,8 @@ class FeedAdapter(
             if (!post.authorAvatarUrl.isNullOrBlank()) {
                 binding.ivAuthorAvatar.load(post.authorAvatarUrl) {
                     crossfade(true)
+                    memoryCachePolicy(CachePolicy.DISABLED)
+                    diskCachePolicy(CachePolicy.DISABLED)
                     placeholder(R.drawable.ic_academic_logo)
                     error(R.drawable.ic_academic_logo)
                 }
@@ -264,6 +267,8 @@ class FeedAdapter(
             if (!post.authorAvatarUrl.isNullOrBlank()) {
                 binding.ivAuthorAvatar.load(post.authorAvatarUrl) {
                     crossfade(true)
+                    memoryCachePolicy(CachePolicy.DISABLED)
+                    diskCachePolicy(CachePolicy.DISABLED)
                     placeholder(R.drawable.ic_academic_logo)
                     error(R.drawable.ic_academic_logo)
                 }

@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.request.CachePolicy
 import com.example.R
 import com.example.databinding.ItemCommentBinding
 
@@ -66,6 +67,8 @@ class CommentAdapter(
             if (!item.avatarUrl.isNullOrBlank()) {
                 binding.ivCommentAvatar.load(item.avatarUrl) {
                     crossfade(true)
+                    memoryCachePolicy(CachePolicy.DISABLED)
+                    diskCachePolicy(CachePolicy.DISABLED)
                     placeholder(R.drawable.ic_academic_logo)
                     error(R.drawable.ic_academic_logo)
                 }
