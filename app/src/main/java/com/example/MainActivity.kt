@@ -684,7 +684,7 @@ class MainActivity : AppCompatActivity() {
 
         // FAZ 12: Ciltli Kitaplık (Book Spine) ve Ahşap Kütüphane Rafı
         val isTablet = resources.configuration.smallestScreenWidthDp >= 600
-        val tabletCols = if (resources.configuration.screenWidthDp >= 900) 4 else 3
+        val screenWidthDp = resources.configuration.screenWidthDp
 
         var isBookSpineMode = true
         profileSharedWorksAdapter.isBookSpineMode = true
@@ -696,20 +696,20 @@ class MainActivity : AppCompatActivity() {
                 dashBinding.tvShelfHeaderTitle.text = "📖 Kütüphane Rafı (Ciltli Eserler)"
                 dashBinding.rvProfileSharedWorks.setBackgroundResource(R.drawable.bg_wooden_library_shelf)
                 dashBinding.btnProfileLayoutToggle.setImageResource(R.drawable.ic_view_list)
-                dashBinding.rvProfileSharedWorks.layoutManager = if (isTablet) {
-                    GridLayoutManager(this@MainActivity, if (resources.configuration.screenWidthDp >= 900) 8 else 6)
-                } else {
-                    LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
-                }
+                // Tablet ve telefonda kitaplar yatay ahşap rafta yan yana bitişik (omuz omuza, 0dp boşluk) dizilir
+                dashBinding.rvProfileSharedWorks.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+                dashBinding.rvProfileSharedWorks.setPadding(0, 0, 0, 0)
             } else {
                 dashBinding.tvShelfHeaderTitle.text = "📄 Liste Görünümü (Tüm Risaleler)"
                 dashBinding.rvProfileSharedWorks.background = null
                 dashBinding.btnProfileLayoutToggle.setImageResource(R.drawable.ic_badge_book)
+                val listCols = if (isTablet) (if (screenWidthDp >= 840) 3 else 2) else 1
                 dashBinding.rvProfileSharedWorks.layoutManager = if (isTablet) {
-                    StaggeredGridLayoutManager(tabletCols, StaggeredGridLayoutManager.VERTICAL)
+                    StaggeredGridLayoutManager(listCols, StaggeredGridLayoutManager.VERTICAL)
                 } else {
                     LinearLayoutManager(this@MainActivity)
                 }
+                dashBinding.rvProfileSharedWorks.setPadding(0, 0, 0, 0)
             }
         }
 
@@ -743,7 +743,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         dashBinding.rvAcademicBadges.apply {
-            val badgeCols = if (isTablet) tabletCols else 2
+            val badgeCols = if (isTablet) (if (resources.configuration.screenWidthDp >= 900) 4 else 3) else 2
             layoutManager = GridLayoutManager(this@MainActivity, badgeCols)
             adapter = academicBadgeAdapter
             itemAnimator = null
@@ -1167,24 +1167,33 @@ class MainActivity : AppCompatActivity() {
 
         // FAZ 11 & 12: Pinterest Tarzı Keşfet & Tablet Dinamik Izgara Yönetimi (sw600dp)
         val isTablet = resources.configuration.smallestScreenWidthDp >= 600
-        val tabletFeedCols = if (resources.configuration.screenWidthDp >= 900) 4 else 3
+        val screenWidthDp = resources.configuration.screenWidthDp
+        val tabletFeedGridCols = when {
+            screenWidthDp >= 1150 -> 4
+            screenWidthDp >= 800 -> 3
+            else -> 2
+        }
+        val tabletFeedListCols = when {
+            screenWidthDp >= 950 -> 3
+            else -> 2
+        }
 
         val feedPrefs = getSharedPreferences("ilm_feed_prefs", Context.MODE_PRIVATE)
-        // Tablet ekranlarda kenarlarda boşluk kalmaması için varsayılan olarak 3'lü/4'lü ızgara açılır
+        // Tablet ekranlarda kenarlarda boşluk kalmaması için varsayılan olarak optimize edilmiş ızgara açılır
         var isGridMode = if (isTablet) true else feedPrefs.getBoolean("key_feed_grid_mode", false)
 
         fun applyFeedLayout(isGrid: Boolean) {
             isGridMode = isGrid
             feedAdapter.isGridMode = isGrid
             if (isGrid) {
-                val spanCount = if (isTablet) tabletFeedCols else 2
+                val spanCount = if (isTablet) tabletFeedGridCols else 2
                 feedBinding.rvFeedPosts.layoutManager = StaggeredGridLayoutManager(spanCount, StaggeredGridLayoutManager.VERTICAL)
                 feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_list)
             } else {
                 if (isTablet) {
-                    // Geniş ekranda tek dikey sütun yerine ferah 2 veya 3 sütunlu yapı
-                    feedBinding.rvFeedPosts.layoutManager = StaggeredGridLayoutManager(tabletFeedCols, StaggeredGridLayoutManager.VERTICAL)
-                    feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_list)
+                    // Geniş ekranda kartların ve ikonların taşmaması için ferah 2 veya 3 sütunlu yapı
+                    feedBinding.rvFeedPosts.layoutManager = StaggeredGridLayoutManager(tabletFeedListCols, StaggeredGridLayoutManager.VERTICAL)
+                    feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_grid)
                 } else {
                     feedBinding.rvFeedPosts.layoutManager = LinearLayoutManager(this@MainActivity)
                     feedBinding.btnFeedLayoutToggle.setImageResource(R.drawable.ic_view_grid)
@@ -2127,20 +2136,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // FAZ 4: Profil Paylaşılan Eserler Listesi (Kullanıcının Kendi Eserleri)
+                // FAZ 4: Profil Paylaşılan Eserler Listesi (Tüm Akademik Eserler - Filtresiz SSOT)
                 launch {
                     feedViewModel.allPosts.collect { allPosts ->
-                        val currentUserId = authViewModel.currentUser.value?.id
-                        val currentUserName = authViewModel.currentUser.value?.fullName
-                        val myWorks = if (currentUserId != null) {
-                            allPosts.filter { it.userId == currentUserId || (currentUserName != null && it.authorName.equals(currentUserName, ignoreCase = true)) }
-                        } else {
-                            allPosts
-                        }
-                        profileSharedWorksAdapter.submitList(myWorks)
+                        profileSharedWorksAdapter.submitList(allPosts)
                         val dashBinding = binding.viewDashboard
-                        dashBinding.tvDashStatsWorksCount.text = "${myWorks.size}"
-                        dashBinding.tvProfileNoWorks.visibility = if (myWorks.isEmpty()) View.VISIBLE else View.GONE
+                        dashBinding.tvDashStatsWorksCount.text = "${allPosts.size}"
+                        dashBinding.tvProfileNoWorks.visibility = if (allPosts.isEmpty()) View.VISIBLE else View.GONE
                     }
                 }
 

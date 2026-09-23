@@ -8,12 +8,10 @@ import com.example.data.local.entity.PostEntity
 import com.example.data.pref.SessionManager
 import com.example.data.remote.GitHubService
 import com.example.data.remote.RetrofitClient
-import com.example.data.remote.model.CreateGitHubIssueRequest
 import com.example.data.remote.model.PostModel
-import com.example.data.remote.model.UpdateGistRequest
-import com.example.data.remote.model.UpdateRepoContentRequest
 import com.example.data.remote.model.toEntity
 import com.example.data.remote.model.toModel
+import com.example.util.AppConfig
 import com.squareup.moshi.Types
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -24,17 +22,18 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
+import org.json.JSONObject
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
- * İlim Diyârı - Global Akış ve Senkronizasyon Deposu (Emir 1).
- * Gerçek ağ çağrıları (OkHttp / Retrofit / HttpURLConnection) ile GitHub Gist ve Repo JSON'ını
- * senkronize eder. Cihazlar arası veri kaybını önler ve Room DB ile Upsert (REPLACE) yapar.
+ * İlim Diyârı - Instagram Tarzı Single Source of Truth (SSOT) Akış Deposu.
+ * 
+ * Mimari İlkeler:
+ * 1. GitHub Authorization: Tüm PUT ve POST isteklerinde Authorization: Bearer $GITHUB_PAT header'ı kullanılır.
+ * 2. Ağ Başarısı Şartı: Ağda (GitHub API) işlem başarılı olmadan Room DB'ye kayıt yapılmaz.
+ * 3. Single Source of Truth: GitHub academic_posts.json -> CacheControl.FORCE_NETWORK ile çekilir -> Room DB'ye yazılır -> UI Room DB Flow'u dinler.
+ * 4. Çevrimdışı Destek: İnternet kesilirse Room DB yerel önbellek verileri sunmaya devam eder.
  */
 class FeedRepository(
     private val postDao: PostDao,
@@ -44,10 +43,6 @@ class FeedRepository(
 ) {
     companion object {
         private const val TAG = "FeedRepository"
-        private const val DEFAULT_OWNER = "mbahadir77"
-        private const val DEFAULT_REPO = "Pdf_Application_V1"
-        private const val POSTS_JSON_PATH = "academic_posts.json"
-        private const val DEFAULT_GIST_ID = "ilim_diyari_global_posts"
     }
 
     private val postsListType = Types.newParameterizedType(List::class.java, PostModel::class.java)
@@ -55,14 +50,15 @@ class FeedRepository(
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
     }
 
     /**
-     * Room DB Flow üzerinden dinamik akış.
+     * Room DB Flow üzerinden dinamik ana akış.
+     * UI doğrudan bu akışı dinler; GitHub'dan yeni veri geldiğinde Room DB güncellenir ve UI anında yenilenir.
      */
     fun getPostsFlow(): Flow<List<PostEntity>> {
         return postDao.getAllPostsWithAuthor().map { list ->
@@ -86,105 +82,107 @@ class FeedRepository(
     }
 
     /**
-     * GitHub Global Senkronizasyonu (GET İsteği & Upsert).
-     * Uygulama açıldığında veya giriş yapıldığında çağrılır:
-     * 1. GitHub Repo / Raw / Gist üzerinden global JSON dosyasını çeker.
-     * 2. GitHub Issues havuzundaki akademik girdileri toplar.
-     * 3. Çekilen tüm verileri Room DB'ye OnConflictStrategy.REPLACE (Upsert) ile kaydeder.
+     * INSTAGRAM TARZI SINGLE SOURCE OF TRUTH (SSOT) SENKRONİZASYON:
+     * Uygulama açıldığında veya yenilendiğinde:
+     * 1. CacheControl.FORCE_NETWORK ile GitHub'daki güncel academic_posts.json dosyasını çeker.
+     * 2. İnternet varsa ve istek başarılıysa: Gelen tüm kullanıcıların paylaştığı PDF'leri Room DB'ye yazar.
+     * 3. İnternet yoksa: Hata loglanır ve Room DB'deki çevrimdışı veriler ekranda gösterilmeye devam eder.
      */
     suspend fun syncWithGitHub(
-        owner: String = DEFAULT_OWNER,
-        repo: String = DEFAULT_REPO
+        owner: String = AppConfig.GITHUB_OWNER,
+        repo: String = AppConfig.GITHUB_REPO
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "GitHub global senkronizasyonu başlatılıyor ($owner/$repo)...")
-            val remotePosts = mutableListOf<PostEntity>()
+            Log.d(TAG, "GitHub SSOT Senkronizasyonu başlatılıyor ($owner/$repo)...")
+            val authHeader = AppConfig.getAuthHeader(sessionManager?.getGitHubToken())
 
-            // 1. GitHub Contents API / Raw GET ile global JSON dosyasını çek
-            val jsonPosts = fetchGlobalJsonPosts(owner, repo)
-            remotePosts.addAll(jsonPosts)
+            // GitHub'dan FORCE_NETWORK ile en güncel veriyi çek
+            val remotePosts = fetchRemotePostsFromGitHub(owner, repo, authHeader)
 
-            // 2. Gist üzerinden veri kontrolü
-            val gistId = sessionManager?.getGistId() ?: DEFAULT_GIST_ID
-            val gistPosts = fetchGistPosts(gistId)
-            for (gp in gistPosts) {
-                if (remotePosts.none { it.id == gp.id }) {
-                    remotePosts.add(gp)
+            if (remotePosts != null) {
+                // Ağdan veriler başarıyla alındı -> Room DB'ye yaz (SSOT)
+                if (remotePosts.isNotEmpty()) {
+                    postDao.insertPosts(remotePosts)
                 }
+                Log.d(TAG, "GitHub senkronizasyonu tamamlandı: ${remotePosts.size} eser Room DB'ye aktarıldı.")
+                Result.success(remotePosts.size)
+            } else {
+                // Ağ isteği başarısız oldu (internet yok) -> Çevrimdışı Room DB verilerini koru
+                val cachedCount = postDao.getPostCount()
+                Log.w(TAG, "GitHub ağına ulaşılamadı. Çevrimdışı $cachedCount eser Room DB'den sunuluyor.")
+                Result.success(cachedCount)
             }
-
-            // 3. GitHub Issues havuzundan paylaşılan PDF'leri topla
-            val issuePosts = fetchGitHubIssuePosts(owner, repo)
-            for (ip in issuePosts) {
-                if (remotePosts.none { it.id == ip.id || (it.title == ip.title && it.authorName == ip.authorName) }) {
-                    remotePosts.add(ip)
-                }
-            }
-
-            // 4. Room DB'ye Upsert (REPLACE)
-            // Yerel kayıtları da ekleyerek hiçbir kullanıcının kendi paylaştığı eserler kaybolmasın, herkes herkesin eserini görsün
-            val localPosts = postDao.getAllPostsList()
-            val combinedMap = LinkedHashMap<String, PostEntity>()
-
-            // Önce yerel verileri ekle
-            for (p in localPosts) {
-                combinedMap[p.id] = p
-            }
-            // Sonra global uzaktan veya ortak listeden gelenleri ekle (veya güncelle)
-            for (p in remotePosts) {
-                if (!combinedMap.containsKey(p.id)) {
-                    combinedMap[p.id] = p
-                }
-            }
-
-            if (combinedMap.isNotEmpty()) {
-                postDao.insertPosts(combinedMap.values.toList())
-                Log.d(TAG, "Global senkronizasyon tamamlandı: ${combinedMap.size} toplam eser Room DB'ye aktarıldı.")
-                return@withContext Result.success(combinedMap.size)
-            }
-
-            Result.success(0)
         } catch (e: Exception) {
-            Log.e(TAG, "GitHub senkronizasyonunda hata: ${e.localizedMessage}", e)
+            Log.e(TAG, "Senkronizasyon sırasında hata: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     /**
-     * GitHub Repo Content veya Raw URL üzerinden global JSON'ı GERÇEK ağ isteği ile çeker.
+     * GitHub Contents API ve Raw CDN üzerinden güncel academic_posts.json dosyasını çeker.
+     * CacheControl.FORCE_NETWORK kullanarak önbelleği tamamen atlar.
      */
-    private suspend fun fetchGlobalJsonPosts(owner: String, repo: String): List<PostEntity> {
-        val resultList = mutableListOf<PostEntity>()
+    private fun fetchRemotePostsFromGitHub(
+        owner: String,
+        repo: String,
+        authHeader: String
+    ): List<PostEntity>? {
+        val (posts, _) = fetchRemotePostsAndSha(owner, repo, authHeader)
+        return posts
+    }
 
-        // 1. Yöntem: GitHub API Contents Endpoint
+    /**
+     * GitHub Contents API üzerinden mevcut JSON içeriğini ve dosyanın 'sha' değerini okur.
+     */
+    private fun fetchRemotePostsAndSha(
+        owner: String,
+        repo: String,
+        authHeader: String
+    ): Pair<List<PostEntity>?, String?> {
+        // 1. Öncelik: GitHub Contents API
         try {
-            val contentResponse = gitHubService.getRepoContent(owner, repo, POSTS_JSON_PATH)
-            if (contentResponse.isSuccessful && contentResponse.body() != null) {
-                val body = contentResponse.body()!!
-                val rawJson = if (body.encoding == "base64" && !body.content.isNullOrBlank()) {
-                    val cleanBase64 = body.content.replace("\n", "").replace("\r", "")
-                    String(Base64.decode(cleanBase64, Base64.DEFAULT), Charsets.UTF_8)
-                } else {
-                    body.content
-                }
+            val requestBuilder = Request.Builder()
+                .url("https://api.github.com/repos/$owner/$repo/contents/${AppConfig.POSTS_FILE_PATH}")
+                .cacheControl(CacheControl.FORCE_NETWORK)
+                .header("Accept", "application/vnd.github+json")
+                .header("X-GitHub-Api-Version", "2022-11-28")
+                .header("User-Agent", "IlimDiyari-Academic/1.0")
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
 
-                if (!rawJson.isNullOrBlank()) {
-                    val models = postsAdapter.fromJson(rawJson).orEmpty()
-                    resultList.addAll(models.map { it.toEntity() })
-                    if (resultList.isNotEmpty()) {
-                        Log.d(TAG, "GitHub Contents API ile ${resultList.size} eser başarıyla çekildi.")
-                        return resultList
+            if (AppConfig.isConfigured(sessionManager?.getGitHubToken())) {
+                requestBuilder.header("Authorization", authHeader)
+            }
+
+            val response = okHttpClient.newCall(requestBuilder.build()).execute()
+            if (response.isSuccessful) {
+                val bodyString = response.body?.string().orEmpty()
+                if (bodyString.isNotBlank()) {
+                    val jsonObject = JSONObject(bodyString)
+                    val sha = jsonObject.optString("sha").takeIf { it.isNotBlank() }
+                    val contentBase64 = jsonObject.optString("content").replace("\n", "").replace("\r", "")
+                    if (contentBase64.isNotBlank()) {
+                        val decodedJson = String(Base64.decode(contentBase64, Base64.DEFAULT), Charsets.UTF_8)
+                        val models = postsAdapter.fromJson(decodedJson).orEmpty()
+                        Log.d(TAG, "GitHub API üzerinden ${models.size} eser ve SHA=$sha çekildi.")
+                        return Pair(models.map { it.toEntity() }, sha)
                     }
                 }
+            } else if (response.code == 404) {
+                // Dosya henüz oluşturulmamış, yeni dosya için sha null döner
+                Log.d(TAG, "GitHub'da ${AppConfig.POSTS_FILE_PATH} henüz mevcut değil (404), yeni oluşturulacak.")
+                return Pair(emptyList(), null)
+            } else {
+                Log.w(TAG, "GitHub Contents GET yanıt kodu: ${response.code}")
             }
         } catch (e: Exception) {
-            Log.w(TAG, "GitHub Content API GET hatası: ${e.message}")
+            Log.w(TAG, "GitHub Contents API GET başarısız: ${e.message}")
         }
 
-        // 2. Yöntem: OkHttp ile Doğrudan Raw CDN URL GET İsteği (Cache-Busting & FORCE_NETWORK)
+        // 2. Yedek: Raw GitHub CDN üzerinden FORCE_NETWORK ile okuma
         val rawUrls = listOf(
-            "https://raw.githubusercontent.com/$owner/$repo/main/$POSTS_JSON_PATH",
-            "https://raw.githubusercontent.com/$owner/$repo/master/$POSTS_JSON_PATH"
+            "https://raw.githubusercontent.com/$owner/$repo/main/${AppConfig.POSTS_FILE_PATH}",
+            "https://raw.githubusercontent.com/$owner/$repo/master/${AppConfig.POSTS_FILE_PATH}"
         )
         for (rawUrl in rawUrls) {
             try {
@@ -204,129 +202,22 @@ class FeedRepository(
                     val bodyString = response.body?.string().orEmpty()
                     if (bodyString.isNotBlank()) {
                         val models = postsAdapter.fromJson(bodyString).orEmpty()
-                        resultList.addAll(models.map { it.toEntity() })
-                        if (resultList.isNotEmpty()) {
-                            Log.d(TAG, "Raw GitHub CDN ($noCacheUrl) üzerinden ${resultList.size} eser çekildi.")
-                            return resultList
-                        }
+                        Log.d(TAG, "Raw CDN üzerinden ${models.size} eser çekildi.")
+                        return Pair(models.map { it.toEntity() }, null)
                     }
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Raw URL GET çağrısı başarısız ($rawUrl): ${e.message}")
+                Log.w(TAG, "Raw URL GET başarısız ($rawUrl): ${e.message}")
             }
         }
 
-        // 3. Yöntem: HttpURLConnection ile Saf Ağ İsteği (Fallback & Cache-Busting)
-        try {
-            val fallbackUrl = "https://raw.githubusercontent.com/$owner/$repo/main/$POSTS_JSON_PATH?t=${System.currentTimeMillis()}"
-            val connection = URL(fallbackUrl).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.useCaches = false
-            connection.defaultUseCaches = false
-            connection.connectTimeout = 10000
-            connection.readTimeout = 10000
-            connection.setRequestProperty("User-Agent", "IlimDiyari-Academic/1.0")
-            connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
-            connection.setRequestProperty("Pragma", "no-cache")
-            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(connection.inputStream))
-                val jsonString = reader.readText()
-                reader.close()
-                if (jsonString.isNotBlank()) {
-                    val models = postsAdapter.fromJson(jsonString).orEmpty()
-                    resultList.addAll(models.map { it.toEntity() })
-                    return resultList
-                }
-            }
-            connection.disconnect()
-        } catch (_: Exception) {}
-
-        // 4. Yöntem: Yerleşik Ortak Akademik Havuz (Assets Fallback - Herkesin Herkesi Görebilmesi İçin)
-        if (resultList.isEmpty() && context != null) {
-            try {
-                context.assets.open(POSTS_JSON_PATH).use { inputStream ->
-                    val json = inputStream.bufferedReader().use { it.readText() }
-                    if (json.isNotBlank()) {
-                        val models = postsAdapter.fromJson(json).orEmpty()
-                        resultList.addAll(models.map { it.toEntity() })
-                        Log.d(TAG, "Assets ($POSTS_JSON_PATH) üzerinden ${resultList.size} ortak akademik eser yüklendi.")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Assets ortak JSON okuma hatası: ${e.message}")
-            }
-        }
-
-        return resultList
+        return Pair(null, null)
     }
 
     /**
-     * GitHub Gist üzerinden JSON verilerini çeker.
-     */
-    private suspend fun fetchGistPosts(gistId: String): List<PostEntity> {
-        if (gistId.isBlank() || gistId == DEFAULT_GIST_ID) return emptyList()
-        return try {
-            val response = gitHubService.getGist(gistId)
-            if (response.isSuccessful && response.body() != null) {
-                val files = response.body()?.files.orEmpty()
-                val targetFile = files[POSTS_JSON_PATH] ?: files.values.firstOrNull()
-                val rawContent = targetFile?.content.orEmpty()
-                if (rawContent.isNotBlank()) {
-                    val models = postsAdapter.fromJson(rawContent).orEmpty()
-                    models.map { it.toEntity() }
-                } else emptyList()
-            } else emptyList()
-        } catch (e: Exception) {
-            Log.w(TAG, "Gist GET çağrısı başarısız: ${e.message}")
-            emptyList()
-        }
-    }
-
-    /**
-     * GitHub Issues sekmesindeki akademik paylaşımları çeker.
-     */
-    private suspend fun fetchGitHubIssuePosts(owner: String, repo: String): List<PostEntity> {
-        return try {
-            val response = gitHubService.getRepoIssues(owner, repo)
-            if (response.isSuccessful) {
-                val issues = response.body().orEmpty()
-                issues.map { issue ->
-                    val category = issue.labels?.firstOrNull()?.name ?: "Genel"
-                    val issueUserId = issue.user?.id?.toString() ?: "gh_${issue.user?.login ?: "user"}"
-                    PostEntity(
-                        id = "gh_issue_${issue.number}",
-                        userId = issueUserId,
-                        title = issue.title,
-                        description = issue.body ?: "Açıklama belirtilmemiş.",
-                        authorName = issue.user?.login ?: "Akademik Araştırmacı",
-                        authorTitle = "İlim Diyârı Akademik Üyesi",
-                        authorAvatarUrl = issue.user?.avatarUrl,
-                        category = category,
-                        pdfUrl = "https://github.com/$owner/$repo/releases/download/v1.0/paper_${issue.number}.pdf",
-                        pdfSize = "2.5 MB",
-                        coverImageUrl = null,
-                        likeCount = 0,
-                        commentCount = issue.comments,
-                        isLiked = false,
-                        createdAt = System.currentTimeMillis(),
-                        githubIssueId = issue.id
-                    )
-                }
-            } else {
-                emptyList()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "GitHub Issues GET çağrısı başarısız: ${e.message}")
-            emptyList()
-        }
-    }
-
-    /**
-     * Yeni Akademik PDF Makale Ekle (Emir 1 - Ağ ve Upsert Senkronizasyonu).
-     * 1. Sadece yerel veritabanına kaydetmez; önce GitHub'daki güncel listeyi çeker.
-     * 2. Yeni kaydı listeye ekleyip de-duplicate eder.
-     * 3. POST / PUT ile GitHub'daki JSON'ı KESİNLİKLE günceller.
-     * 4. Tüm veriyi Room DB'ye OnConflictStrategy.REPLACE ile yazar.
+     * YENİ AKADEMİK PDF ESER EKLEME:
+     * Kural: Ağda (GitHub API) işlem başarılı olmadan KESİNLİKLE Room DB'ye kayıt yapılmaz!
+     * İstek 'Authorization: Bearer $GITHUB_PAT' başlığıyla GitHub'a PUT edilir.
      */
     suspend fun addNewPost(
         title: String,
@@ -338,15 +229,24 @@ class FeedRepository(
         userId: String? = null,
         coverImageUrl: String? = null,
         pdfSize: String = "2.4 MB",
-        owner: String = DEFAULT_OWNER,
-        repo: String = DEFAULT_REPO
+        owner: String = AppConfig.GITHUB_OWNER,
+        repo: String = AppConfig.GITHUB_REPO
     ): Result<PostEntity> = withContext(Dispatchers.IO) {
+        val authHeader = AppConfig.getAuthHeader(sessionManager?.getGitHubToken())
+
+        // 1. PAT Kontrolü: Token olmadan GitHub'a dosya yazılamaz
+        if (!AppConfig.isConfigured(sessionManager?.getGitHubToken())) {
+            val tokenError = "GitHub Personal Access Token (PAT) bulunamadı! academic_posts.json dosyasına yazabilmek için AppConfig.kt içerisindeki GITHUB_PAT değişkenine geçerli bir GitHub Token giriniz."
+            Log.e(TAG, tokenError)
+            return@withContext Result.failure(IllegalStateException(tokenError))
+        }
+
         val newPost = PostEntity(
-            id = "post_${UUID.randomUUID()}",
+            id = UUID.randomUUID().toString(),
             userId = userId,
             title = title.trim(),
             description = description.trim(),
-            authorName = authorName.ifBlank { "Araştırmacı" },
+            authorName = authorName.ifBlank { "İlim Yolcusu" },
             authorTitle = authorTitle.ifBlank { "İlim Diyârı Akademik Üyesi" },
             authorAvatarUrl = null,
             category = category,
@@ -359,127 +259,117 @@ class FeedRepository(
             createdAt = System.currentTimeMillis()
         )
 
-        try {
-            // 1. GitHub'daki mevcut güncel listeyi çek
-            val remotePosts = fetchGlobalJsonPosts(owner, repo).toMutableList()
+        // 2. GitHub'daki mevcut dosyayı ve geçerli commit SHA'sını çek
+        val (existingPosts, currentSha) = fetchRemotePostsAndSha(owner, repo, authHeader)
+        val currentList = existingPosts ?: postDao.getAllPostsList()
 
-            // 2. Yerel DB'deki mevcut listeyi de alarak hiçbir verinin kaybolmamasını sağla
-            val localPosts = postDao.getAllPostsList()
-            val combinedMap = LinkedHashMap<String, PostEntity>()
+        // 3. Yeni eseri listenin başına ekle
+        val updatedModels = listOf(newPost.toModel()) + currentList.filter { it.id != newPost.id }.map { it.toModel() }
+        val jsonString = postsAdapter.toJson(updatedModels)
+        val base64Content = Base64.encodeToString(jsonString.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
 
-            for (p in localPosts) {
-                combinedMap[p.id] = p
-            }
-            for (p in remotePosts) {
-                combinedMap[p.id] = p
-            }
-            combinedMap[newPost.id] = newPost
+        // 4. GitHub API PUT isteği at (Authorization: Bearer $GITHUB_PAT ile)
+        val putResult = putPostsJsonToGitHub(owner, repo, base64Content, currentSha, newPost.title, authHeader)
 
-            val fullUpdatedList = combinedMap.values.sortedByDescending { it.createdAt }
-
-            // 3. Güncel listeyi JSON'a dönüştür ve GitHub'a POST/PUT ile gönder
-            val updatedJson = postsAdapter.toJson(fullUpdatedList.map { it.toModel() })
-            pushUpdatedJsonToGitHub(owner, repo, updatedJson, newPost)
-
-            // 4. Tüm verileri Room DB'ye Upsert (REPLACE) et
-            postDao.insertPosts(fullUpdatedList)
-
-            Log.d(TAG, "Yeni PDF başarıyla eklendi, senkronize edildi ve Room DB'ye yazıldı: ${newPost.title}")
-            Result.success(newPost)
-        } catch (e: Exception) {
-            Log.e(TAG, "GitHub senkronizasyonunda istisna: ${e.message}. Güvenlik için yerel DB'ye kaydediliyor.", e)
+        if (putResult.isSuccess) {
+            // AĞDA İŞLEM BAŞARILI! ŞİMDİ ROOM DB'YE YAZ
             postDao.insertPost(newPost)
+            postDao.insertPosts(updatedModels.map { it.toEntity() })
+            Log.d(TAG, "Eser GitHub'a başarıyla yazıldı (HTTP 200/201) ve Room DB senkronize edildi: ${newPost.title}")
+
+            // İsteğe bağlı: Issues sekmesine de kayıt aç
+            createIssueNotification(owner, repo, newPost, authHeader)
+
             Result.success(newPost)
+        } else {
+            // Ağda işlem başarısız olduysa KESİNLİKLE Room DB'ye kaydetme!
+            val error = putResult.exceptionOrNull() ?: Exception("GitHub API yazma hatası.")
+            Log.e(TAG, "Ağ işlemi başarısız olduğu için eser Room DB'ye kaydedilmedi: ${error.message}")
+            Result.failure(error)
         }
     }
 
     /**
-     * Güncellenen JSON'ı GitHub Repo Content (PUT), Gist (PATCH) ve Issues (POST) ile gönderir.
+     * GitHub Contents API'ye PUT isteği atarak academic_posts.json dosyasını günceller.
+     * Header KESİNLİKLE 'Authorization: Bearer $GITHUB_PAT' içerir.
      */
-    private suspend fun pushUpdatedJsonToGitHub(
+    private fun putPostsJsonToGitHub(
         owner: String,
         repo: String,
-        jsonContent: String,
-        newPost: PostEntity
-    ) {
-        val token = sessionManager?.getGitHubToken()?.let {
-            if (it.startsWith("token ") || it.startsWith("Bearer ")) it else "Bearer $it"
-        }
-
-        // 1. Repo Content PUT isteği
-        try {
-            var currentSha: String? = null
-            try {
-                val existing = gitHubService.getRepoContent(owner, repo, POSTS_JSON_PATH)
-                if (existing.isSuccessful) {
-                    currentSha = existing.body()?.sha
+        base64Content: String,
+        sha: String?,
+        postTitle: String,
+        authHeader: String
+    ): Result<Unit> {
+        return try {
+            val payloadObj = JSONObject().apply {
+                put("message", "İlim Diyârı: Yeni Eser Eklendi - $postTitle")
+                put("content", base64Content)
+                if (!sha.isNullOrBlank()) {
+                    put("sha", sha)
                 }
-            } catch (_: Exception) {}
-
-            val base64Content = Base64.encodeToString(jsonContent.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-            val updateRequest = UpdateRepoContentRequest(
-                message = "İlim Diyârı: Yeni Eser Eklendi - ${newPost.title}",
-                content = base64Content,
-                sha = currentSha
-            )
-
-            val pushResponse = gitHubService.updateRepoContent(token, owner, repo, POSTS_JSON_PATH, updateRequest)
-            if (pushResponse.isSuccessful) {
-                Log.d(TAG, "GitHub Repo Content PUT 200/201: Global JSON başarıyla güncellendi.")
-            } else {
-                Log.w(TAG, "GitHub Repo Content PUT yanıt kodu: ${pushResponse.code()}")
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "GitHub Repo Content PUT hatası: ${e.message}")
-        }
 
-        // 2. Gist PATCH isteği (Gist ID yapılandırılmışsa)
-        val gistId = sessionManager?.getGistId()
-        if (!gistId.isNullOrBlank() && gistId != DEFAULT_GIST_ID) {
-            try {
-                val gistRequest = UpdateGistRequest(
-                    description = "İlim Diyârı Akademik Yayınlar",
-                    files = mapOf(
-                        POSTS_JSON_PATH to com.example.data.remote.model.GitHubGistFile(
-                            content = jsonContent
-                        )
-                    )
-                )
-                val gistResponse = gitHubService.updateGist(token, gistId, gistRequest)
-                if (gistResponse.isSuccessful) {
-                    Log.d(TAG, "GitHub Gist PATCH 200: Gist başarıyla güncellendi.")
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Gist PATCH güncelleme hatası: ${e.message}")
-            }
-        }
-
-        // 3. OkHttp ile Doğrudan GitHub Issues POST Çağrısı
-        try {
-            val issueJson = """
-                {
-                    "title": "${newPost.title.replace("\"", "\\\"")}",
-                    "body": "${newPost.description.replace("\"", "\\\"")}\n\nYazar: ${newPost.authorName}\nKategori: ${newPost.category}\nPDF: ${newPost.pdfUrl}",
-                    "labels": ["${newPost.category}", "İlimDiyarı"]
-                }
-            """.trimIndent()
-
-            val requestBuilder = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/issues")
+            val request = Request.Builder()
+                .url("https://api.github.com/repos/$owner/$repo/contents/${AppConfig.POSTS_FILE_PATH}")
+                .header("Authorization", authHeader)
+                .header("Accept", "application/vnd.github+json")
+                .header("X-GitHub-Api-Version", "2022-11-28")
                 .header("User-Agent", "IlimDiyari-Academic/1.0")
-                .header("Accept", "application/vnd.github.v3+json")
-                .post(issueJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .put(payloadObj.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .build()
 
-            if (!token.isNullOrBlank()) {
-                requestBuilder.header("Authorization", token)
-            }
-
-            val callResponse = okHttpClient.newCall(requestBuilder.build()).execute()
-            if (callResponse.isSuccessful) {
-                Log.d(TAG, "GitHub Issue POST başarılı: Eser Issues sekmesine kaydedildi.")
+            val response = okHttpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                Log.d(TAG, "GitHub Contents PUT başarılı (HTTP ${response.code})")
+                Result.success(Unit)
+            } else {
+                val errorBody = response.body?.string().orEmpty()
+                val errorMsg = when (response.code) {
+                    401 -> "GitHub Yetkilendirme Hatası (401 Unauthorized): GITHUB_PAT token'ı geçersiz veya yetkisiz. Lütfen AppConfig.kt içerisindeki token'ı kontrol ediniz."
+                    403 -> "GitHub Yetki Yetersiz (403 Forbidden): Token'ın 'repo' veya 'contents:write' yazma izni bulunmuyor."
+                    404 -> "GitHub Repo Bulunamadı (404 Not Found): '$owner/$repo' deposuna erişilemedi."
+                    409 -> "GitHub Çakışma Hatası (409 Conflict): Dosya SHA değeri uyuşmadı, lütfen tekrar deneyiniz."
+                    else -> "GitHub PUT başarısız (HTTP ${response.code}): $errorBody"
+                }
+                Log.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Log.w(TAG, "GitHub Issue kaydı oluşturulamadı: ${e.message}")
+            Log.e(TAG, "GitHub PUT isteği sırasında ağ istisnası: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * GitHub Issues sekmesine bildirim kaydı açar.
+     */
+    private fun createIssueNotification(owner: String, repo: String, post: PostEntity, authHeader: String) {
+        try {
+            val issueJson = JSONObject().apply {
+                put("title", post.title)
+                put("body", "${post.description}\n\n**Yazar:** ${post.authorName}\n**Kategori:** ${post.category}\n**PDF:** ${post.pdfUrl}")
+                put("labels", org.json.JSONArray().apply {
+                    put(post.category)
+                    put("İlimDiyarı")
+                })
+            }.toString()
+
+            val request = Request.Builder()
+                .url("https://api.github.com/repos/$owner/$repo/issues")
+                .header("Authorization", authHeader)
+                .header("Accept", "application/vnd.github+json")
+                .header("X-GitHub-Api-Version", "2022-11-28")
+                .header("User-Agent", "IlimDiyari-Academic/1.0")
+                .post(issueJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .build()
+
+            val res = okHttpClient.newCall(request).execute()
+            if (res.isSuccessful) {
+                Log.d(TAG, "GitHub Issue kaydı başarıyla oluşturuldu.")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "GitHub Issue oluşturulamadı: ${e.message}")
         }
     }
 
@@ -494,12 +384,38 @@ class FeedRepository(
     }
 
     /**
-     * Post Silme (Room DB ve Akıştan anında kaldırılır).
+     * Post Silme (Ağda işlem başarılı olursa Room DB'den silinir).
      */
-    suspend fun deletePost(postId: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deletePost(
+        postId: String,
+        owner: String = AppConfig.GITHUB_OWNER,
+        repo: String = AppConfig.GITHUB_REPO
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            postDao.deletePostById(postId)
-            Result.success(Unit)
+            val authHeader = AppConfig.getAuthHeader(sessionManager?.getGitHubToken())
+            if (!AppConfig.isConfigured(sessionManager?.getGitHubToken())) {
+                postDao.deletePostById(postId)
+                return@withContext Result.success(Unit)
+            }
+
+            val (existingPosts, currentSha) = fetchRemotePostsAndSha(owner, repo, authHeader)
+            if (existingPosts != null) {
+                val updatedModels = existingPosts.filter { it.id != postId }.map { it.toModel() }
+                val jsonString = postsAdapter.toJson(updatedModels)
+                val base64Content = Base64.encodeToString(jsonString.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+
+                val putResult = putPostsJsonToGitHub(owner, repo, base64Content, currentSha, "Eser Silindi ($postId)", authHeader)
+                if (putResult.isSuccess) {
+                    postDao.deletePostById(postId)
+                    Result.success(Unit)
+                } else {
+                    val err = putResult.exceptionOrNull() ?: Exception("Eser GitHub'dan silinemedi.")
+                    Result.failure(err)
+                }
+            } else {
+                postDao.deletePostById(postId)
+                Result.success(Unit)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

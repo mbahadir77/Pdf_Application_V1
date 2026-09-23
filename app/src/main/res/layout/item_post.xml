@@ -187,132 +187,146 @@
         android:layout_marginTop="14dp"
         android:background="@color/glass_stroke_white" />
 
-    <!-- Alt Kısım: Beğen, Yorum Yap, Tarih ve Oku Butonu -->
-    <LinearLayout
+    <!-- Alt Kısım: Beğen, Yorum Yap, Tarih ve Oku Butonu (Tablette Taşmayı Önleyen Responsive Düzen) -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:gravity="center_vertical">
 
-        <!-- Altın ikonlu 'Beğen' Butonu -->
+        <!-- Sol Grup: Beğen, Yorum, Paylaş, Tarih -->
         <LinearLayout
-            android:id="@+id/btn_post_like"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="6dp">
-
-            <ImageView
-                android:id="@+id/iv_like_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_heart_outline" />
-
-            <TextView
-                android:id="@+id/tv_like_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                tools:text="42" />
-        </LinearLayout>
-
-        <!-- Altın ikonlu 'Yorum Yap' Butonu -->
-        <LinearLayout
-            android:id="@+id/btn_post_comment"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginStart="14dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="6dp">
-
-            <ImageView
-                android:id="@+id/iv_comment_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_comment_outline" />
-
-            <TextView
-                android:id="@+id/tv_comment_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                tools:text="7" />
-        </LinearLayout>
-
-        <!-- Dışa Paylaş Butonu (FAZ 7) -->
-        <LinearLayout
-            android:id="@+id/btn_post_share"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginStart="10dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="6dp">
-
-            <ImageView
-                android:id="@+id/iv_share_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="Paylaş"
-                android:src="@drawable/ic_share" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_post_date"
-            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:textColor="@color/text_tertiary"
-            android:textSize="11sp"
-            tools:text="2 sa önce" />
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/btn_read_pdf"
+            android:layout_marginEnd="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <!-- 'PDF Oku' Altın Butonu -->
+            <!-- Altın ikonlu 'Beğen' Butonu -->
+            <LinearLayout
+                android:id="@+id/btn_post_like"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="4dp">
+
+                <ImageView
+                    android:id="@+id/iv_like_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_heart_outline" />
+
+                <TextView
+                    android:id="@+id/tv_like_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    tools:text="42" />
+            </LinearLayout>
+
+            <!-- Altın ikonlu 'Yorum Yap' Butonu -->
+            <LinearLayout
+                android:id="@+id/btn_post_comment"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="4dp">
+
+                <ImageView
+                    android:id="@+id/iv_comment_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_comment_outline" />
+
+                <TextView
+                    android:id="@+id/tv_comment_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    tools:text="7" />
+            </LinearLayout>
+
+            <!-- Dışa Paylaş Butonu (FAZ 7) -->
+            <LinearLayout
+                android:id="@+id/btn_post_share"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="4dp">
+
+                <ImageView
+                    android:id="@+id/iv_share_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Paylaş"
+                    android:src="@drawable/ic_share" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_post_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_tertiary"
+                android:textSize="10sp"
+                tools:text="2 sa önce" />
+        </LinearLayout>
+
+        <!-- 'PDF Oku' Altın Butonu (İndirme İkonu): Kartın Sağına Sabitlendi, Asla Taşmaz -->
         <LinearLayout
             android:id="@+id/btn_read_pdf"
             android:layout_width="wrap_content"
             android:layout_height="34dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
             android:background="@drawable/bg_btn_gold_pill"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingHorizontal="14dp">
+            android:paddingHorizontal="10dp">
 
             <ImageView
-                android:layout_width="15dp"
-                android:layout_height="15dp"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_download_pdf" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="5dp"
                 android:text="PDF Oku"
                 android:textColor="@color/btn_text_dark"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

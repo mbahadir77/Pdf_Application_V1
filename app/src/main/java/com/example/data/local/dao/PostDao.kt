@@ -69,6 +69,9 @@ interface PostDao {
     @Query("DELETE FROM posts WHERE id = :postId")
     suspend fun deletePostById(postId: String)
 
+    @Query("DELETE FROM posts WHERE id LIKE 'global_post_%' OR author_name LIKE '%Kerem Aksoy%' OR author_name LIKE '%Mehmed Emin%' OR author_name LIKE '%Zeynep Kaya%' OR author_name LIKE '%Ahmet Yılmaz%' OR author_name LIKE '%Ömer Faruk%' OR author_name LIKE '%Fatma Zehra%' OR user_id LIKE 'author_%'")
+    suspend fun purgeDummyPosts()
+
     @Query("DELETE FROM posts")
     suspend fun clearAllPosts()
 }
