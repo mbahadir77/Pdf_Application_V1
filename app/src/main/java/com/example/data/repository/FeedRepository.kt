@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+import android.content.Context
 import android.util.Base64
 import android.util.Log
 import com.example.data.local.dao.PostDao
@@ -38,7 +39,8 @@ import java.util.concurrent.TimeUnit
 class FeedRepository(
     private val postDao: PostDao,
     private val gitHubService: GitHubService = RetrofitClient.gitHubService,
-    private val sessionManager: SessionManager? = null
+    private val sessionManager: SessionManager? = null,
+    private val context: Context? = null
 ) {
     companion object {
         private const val TAG = "FeedRepository"
@@ -120,10 +122,25 @@ class FeedRepository(
             }
 
             // 4. Room DB'ye Upsert (REPLACE)
-            if (remotePosts.isNotEmpty()) {
-                postDao.insertPosts(remotePosts)
-                Log.d(TAG, "GitHub senkronizasyonu tamamlandı: ${remotePosts.size} eser Room DB'ye aktarıldı.")
-                return@withContext Result.success(remotePosts.size)
+            // Yerel kayıtları da ekleyerek hiçbir kullanıcının kendi paylaştığı eserler kaybolmasın, herkes herkesin eserini görsün
+            val localPosts = postDao.getAllPostsList()
+            val combinedMap = LinkedHashMap<String, PostEntity>()
+
+            // Önce yerel verileri ekle
+            for (p in localPosts) {
+                combinedMap[p.id] = p
+            }
+            // Sonra global uzaktan veya ortak listeden gelenleri ekle (veya güncelle)
+            for (p in remotePosts) {
+                if (!combinedMap.containsKey(p.id)) {
+                    combinedMap[p.id] = p
+                }
+            }
+
+            if (combinedMap.isNotEmpty()) {
+                postDao.insertPosts(combinedMap.values.toList())
+                Log.d(TAG, "Global senkronizasyon tamamlandı: ${combinedMap.size} toplam eser Room DB'ye aktarıldı.")
+                return@withContext Result.success(combinedMap.size)
             }
 
             Result.success(0)
@@ -223,6 +240,22 @@ class FeedRepository(
             }
             connection.disconnect()
         } catch (_: Exception) {}
+
+        // 4. Yöntem: Yerleşik Ortak Akademik Havuz (Assets Fallback - Herkesin Herkesi Görebilmesi İçin)
+        if (resultList.isEmpty() && context != null) {
+            try {
+                context.assets.open(POSTS_JSON_PATH).use { inputStream ->
+                    val json = inputStream.bufferedReader().use { it.readText() }
+                    if (json.isNotBlank()) {
+                        val models = postsAdapter.fromJson(json).orEmpty()
+                        resultList.addAll(models.map { it.toEntity() })
+                        Log.d(TAG, "Assets ($POSTS_JSON_PATH) üzerinden ${resultList.size} ortak akademik eser yüklendi.")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Assets ortak JSON okuma hatası: ${e.message}")
+            }
+        }
 
         return resultList
     }

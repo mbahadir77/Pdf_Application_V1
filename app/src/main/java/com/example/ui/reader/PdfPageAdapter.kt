@@ -120,10 +120,15 @@ class PdfPageAdapter(
     fun close() {
         try {
             saveAllPendingDrawings()
-            pageBitmaps.values.forEach { it.recycle() }
             pageBitmaps.clear()
-            pdfRenderer?.close()
-            fileDescriptor?.close()
+            try {
+                pdfRenderer?.close()
+            } catch (_: Exception) {}
+            try {
+                fileDescriptor?.close()
+            } catch (_: Exception) {}
+            pdfRenderer = null
+            fileDescriptor = null
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -120,7 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val feedRepository by lazy {
-        FeedRepository(appDatabase.postDao(), RetrofitClient.gitHubService, sessionManager)
+        FeedRepository(appDatabase.postDao(), RetrofitClient.gitHubService, sessionManager, applicationContext)
     }
 
     private val splashViewModel: SplashViewModel by viewModels {
@@ -142,6 +143,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedAddPostCategory = "Tefsir"
     private var currentPdfAdapter: PdfPageAdapter? = null
     private var currentActivePdfFile: File? = null
+    private var isPdfReaderOpen: Boolean = false
     private var previousBadgeLevels: Map<String, Int>? = null
 
     // FAZ 7 & 9: Android 13+ Gerçek Sistem Bildirimleri İzni & Hikmet Bildirimi
@@ -286,6 +288,9 @@ class MainActivity : AppCompatActivity() {
         observeFeedState()
         observeEditProfileState()
         observeNotificationsCount()
+
+        // Global havuz senkronizasyonu - Tüm kullanıcıların ve araştırmacıların eserlerini yükle
+        feedViewModel.refreshFromGitHub()
 
         // Bildirim Deep Link Yönlendirmesini Gerçekleştir
         handleNotificationDeepLink(intent)
@@ -523,21 +528,32 @@ class MainActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // PDF Okuma modundayken fiziksel veya sanal geri tuşuna basıldığında
+                // uygulamanın kapanması veya çökmesi engellenir; doğrudan ana akışa dönülür.
+                if (isPdfReaderOpen || binding.viewPdfReader.root.visibility == View.VISIBLE) {
+                    closeInternalPdfReader()
+                    return
+                }
                 if (supportFragmentManager.backStackEntryCount > 0) {
                     supportFragmentManager.popBackStack()
-                } else if (binding.viewPdfReader.root.visibility == View.VISIBLE) {
-                    closeInternalPdfReader()
-                } else if (binding.viewEditProfile.root.visibility == View.VISIBLE) {
+                    return
+                }
+                if (binding.viewEditProfile.root.visibility == View.VISIBLE) {
                     closeEditProfileScreen()
-                } else if (binding.viewSettings.root.visibility == View.VISIBLE) {
+                    return
+                }
+                if (binding.viewSettings.root.visibility == View.VISIBLE) {
                     closeSettingsScreen()
-                } else if (feedViewModel.selectedTab.value != NavTab.FEED) {
+                    return
+                }
+                if (feedViewModel.selectedTab.value != NavTab.FEED) {
                     feedViewModel.selectNavTab(NavTab.FEED)
                     switchMainTab(NavTab.FEED)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
+                    return
                 }
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
             }
         })
     }
@@ -1650,6 +1666,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openInternalPdfReader(post: PostEntity) {
+        isPdfReaderOpen = true
         // Ana ekranları ve alt menüyü gizle, tam ekran PDF okuyucuyu göster
         binding.viewFeed.root.visibility = View.GONE
         binding.viewAddPdf.root.visibility = View.GONE
@@ -1773,28 +1790,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun closeInternalPdfReader() {
+        if (!isPdfReaderOpen && binding.viewPdfReader.root.visibility != View.VISIBLE) return
+        isPdfReaderOpen = false
+
         if (isItikafModeActive) {
             exitItikafMode(userExitedManually = true)
         }
         val readerBinding = binding.viewPdfReader
-        val exitAnim = AnimationUtils.loadAnimation(this, R.anim.pdf_reader_exit)
-        exitAnim.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(animation: Animation?) {}
-            override fun onAnimationEnd(animation: Animation?) {
-                readerBinding.root.visibility = View.GONE
-                readerBinding.layoutReaderSearchPanel.visibility = View.GONE
-                readerBinding.etReaderSearch.text = null
-                readerBinding.tvSearchSummary.visibility = View.GONE
-                searchResultAdapter.submitResults(emptyList())
+        readerBinding.root.clearAnimation()
 
-                currentPdfAdapter?.close()
-                currentPdfAdapter = null
-                currentActivePdfFile = null
-                showMainAppView()
-            }
-            override fun onAnimationRepeat(animation: Animation?) {}
-        })
-        readerBinding.root.startAnimation(exitAnim)
+        // 1. Önce RecyclerView adapter'ını ayır (View-Bitmap ilişiğini güvenle kes)
+        readerBinding.rvPdfPages.adapter = null
+
+        // 2. Okuyucu arayüzünü anında gizle
+        readerBinding.root.visibility = View.GONE
+        readerBinding.layoutReaderSearchPanel.visibility = View.GONE
+        readerBinding.etReaderSearch.text = null
+        readerBinding.tvSearchSummary.visibility = View.GONE
+        searchResultAdapter.submitResults(emptyList())
+
+        // 3. Adapter ve PdfRenderer kaynaklarını güvenle serbest bırak
+        try {
+            currentPdfAdapter?.close()
+        } catch (e: Exception) {
+            Log.e("MainActivity", "PDF adapter kapatma hatası: ${e.message}")
+        }
+        currentPdfAdapter = null
+        currentActivePdfFile = null
+
+        // 4. Ana akış ekranını geri getir
+        showMainAppView()
     }
 
     // ==========================================
@@ -1927,6 +1952,9 @@ class MainActivity : AppCompatActivity() {
                         profileSharedWorksAdapter.currentUserId = user.id
                         profileSharedWorksAdapter.currentUserName = user.fullName
                         profileSharedWorksAdapter.notifyDataSetChanged()
+
+                        // Kullanıcı değiştiğinde veya giriş yaptığında akışı güncelle
+                        feedViewModel.refreshFromGitHub()
 
                         val dashBinding = binding.viewDashboard
                         dashBinding.tvDashUserName.text = user.fullName
@@ -2265,6 +2293,22 @@ class MainActivity : AppCompatActivity() {
             itikafFailed = true
             exitItikafMode(userExitedManually = false)
         }
+    }
+
+    override fun onBackPressed() {
+        if (isPdfReaderOpen || binding.viewPdfReader.root.visibility == View.VISIBLE) {
+            closeInternalPdfReader()
+            return
+        }
+        super.onBackPressed()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_BACK && (isPdfReaderOpen || binding.viewPdfReader.root.visibility == View.VISIBLE)) {
+            closeInternalPdfReader()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 }
 
