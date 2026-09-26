@@ -155,7 +155,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@null"
-            android:hint="Akademik tahlil veya müzakere notu yazın..."
+            android:hint="Yorum veya müzakere notu yazın..."
             android:inputType="textCapSentences|textMultiLine"
             android:maxLines="3"
             android:minHeight="40dp"
